@@ -1,0 +1,15 @@
+{
+  "name": "Kiss Me Restaurant & Events System",
+  "description": "Enterprise-level management and marketing platform for Kiss Me Store & Food Corner, featuring real-time POS, ordering, event management, and social CMS.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "Firebase",
+    "Real-time Updates",
+    "POS",
+    "Marketing CMS"
+  ]
+}

@@ -1,0 +1,118 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definitions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Role-based helper
+    function getRole() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        getRole() == 'admin' || 
+        request.auth.token.email == 'liebedel7@gmail.com'
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Entities Validations
+    function isValidUser(data) {
+      return data.email is string &&
+             data.displayName is string &&
+             data.role in ['customer', 'admin', 'staff'] &&
+             data.points is number &&
+             data.tier in ['Bronze', 'Silver', 'Gold'];
+    }
+
+    function isValidProduct(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.price is number && data.price >= 0 &&
+             data.categoryId is string;
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0;
+    }
+
+    function isValidEvent(data) {
+      return data.title is string && data.title.size() > 0 &&
+             data.date is string &&
+             data.time is string;
+    }
+
+    function isValidOrder(data) {
+      return data.customerId == request.auth.uid &&
+             data.total is number &&
+             data.status in ['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled'];
+    }
+
+    // 1. Users Collection
+    match /users/{userId} {
+      allow get: if isOwner(userId) || isAdmin();
+      allow list: if isAdmin();
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && isValidUser(incoming()) && (
+        // Only allow certain fields to be updated by the user themselves
+        incoming().diff(existing()).affectedKeys().hasOnly(['points', 'tier', 'displayName', 'photoURL', 'savedAddresses'])
+      ) || isAdmin();
+    }
+
+    // 2. Categories Collection
+    match /categories/{categoryId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidCategory(incoming());
+    }
+
+    // 3. Products Collection
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidProduct(incoming());
+    }
+
+    // 4. Events Collection
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if isAdmin() && isValidEvent(incoming());
+    }
+
+    // 5. Orders Collection
+    match /orders/{orderId} {
+      allow get: if isOwner(existing().customerId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn() && isValidOrder(incoming());
+      allow update: if isAdmin() || (isOwner(existing().customerId) && incoming().status == 'cancelled' && existing().status == 'pending');
+    }
+
+    // 6. Reservations (Adding for completeness)
+    match /reservations/{resId} {
+      allow get: if isOwner(existing().customerId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn();
+      allow update: if isAdmin() || isOwner(existing().customerId);
+    }
+  }
+}

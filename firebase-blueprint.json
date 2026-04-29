@@ -1,0 +1,166 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Customer account information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "role": { "type": "string", "enum": ["customer", "admin", "staff"] },
+        "points": { "type": "number" },
+        "tier": { "type": "string", "enum": ["Bronze", "Silver", "Gold"] },
+        "savedAddresses": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "role"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Menu categories (e.g., Starters, Main Course)",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "order": { "type": "number" },
+        "active": { "type": "boolean" }
+      },
+      "required": ["name"]
+    },
+    "Product": {
+      "title": "Product",
+      "description": "Menu items",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "price": { "type": "number" },
+        "categoryId": { "type": "string" },
+        "image": { "type": "string" },
+        "available": { "type": "boolean" },
+        "stock": { "type": "number" },
+        "trackInventory": { "type": "boolean" },
+        "bestSeller": { "type": "boolean" },
+        "featured": { "type": "boolean" },
+        "variants": { "type": "array" },
+        "ingredients": { "type": "array" }
+      },
+      "required": ["name", "price", "categoryId"]
+    },
+    "Order": {
+      "title": "Order",
+      "description": "Customer orders",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cooking", "ready", "delivery", "delivered", "cancelled", "completed"] },
+        "type": { "type": "string", "enum": ["dine-in", "pickup", "delivery", "advance", "bulk", "catering", "Terminal"] },
+        "total": { "type": "number" },
+        "paymentStatus": { "type": "string", "enum": ["unpaid", "paid"] },
+        "paymentMethod": { "type": "string" },
+        "items": { "type": "array" },
+        "statusHistory": { "type": "array" },
+        "notes": { "type": "string" },
+        "address": { "type": "object" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["customerId", "status", "type", "total"]
+    },
+    "Moment": {
+      "title": "Moment",
+      "description": "Captured guest experiences and event highlights",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "featured": { "type": "boolean" }
+      },
+      "required": ["title", "imageUrl"]
+    },
+    "SiteSettings": {
+      "title": "SiteSettings",
+      "description": "Global application configuration and content",
+      "type": "object",
+      "properties": {
+        "heroTitle": { "type": "string" },
+        "heroSubtitle": { "type": "string" },
+        "heroImage": { "type": "string" },
+        "features": { "type": "array" }
+      }
+    },
+    "Reservation": {
+      "title": "Reservation",
+      "description": "Table or event reservations",
+      "type": "object",
+      "properties": {
+        "customerId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "time": { "type": "string" },
+        "guests": { "type": "number" },
+        "type": { "type": "string", "enum": ["table", "event"] },
+        "notes": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "tableId": { "type": "string" },
+        "eventId": { "type": "string" }
+      },
+      "required": ["customerId", "date", "time", "guests", "type"]
+    },
+    "Reminder": {
+      "title": "Reminder",
+      "description": "Scheduled communications for participants",
+      "type": "object",
+      "properties": {
+        "eventId": { "type": "string" },
+        "message": { "type": "string" },
+        "subject": { "type": "string" },
+        "scheduledAt": { "type": "string", "format": "date-time" },
+        "sentAt": { "type": "string", "format": "date-time" },
+        "type": { "type": "string", "enum": ["email", "in-app", "both"] },
+        "status": { "type": "string", "enum": ["scheduled", "sent", "failed"] }
+      },
+      "required": ["eventId", "message", "scheduledAt", "type", "status"]
+    },
+    "InAppNotification": {
+      "title": "InAppNotification",
+      "description": "Individual notification records",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "read": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "eventId": { "type": "string" }
+      },
+      "required": ["userId", "title", "message", "read", "createdAt"]
+    },
+    "Event": {
+      "title": "Event",
+      "description": "Special events and happenings",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "desc": { "type": "string" },
+        "date": { "type": "string" },
+        "time": { "type": "string" },
+        "img": { "type": "string" }
+      },
+      "required": ["title", "date", "time"]
+    }
+  },
+  "firestore": {
+    "/users": { "schema": "User", "description": "Customer collection" },
+    "/categories": { "schema": "Category", "description": "Menu categories" },
+    "/products": { "schema": "Product", "description": "Menu products" },
+    "/orders": { "schema": "Order", "description": "Customer orders" },
+    "/reservations": { "schema": "Reservation", "description": "Reservations" },
+    "/events": { "schema": "Event", "description": "Marketing events" },
+    "/moments": { "schema": "Moment", "description": "Guest gallery" },
+    "/settings": { "schema": "SiteSettings", "description": "Global config" },
+    "/reminders": { "schema": "Reminder", "description": "Admin scheduled messages" },
+    "/notifications": { "schema": "InAppNotification", "description": "User inbox" }
+  }
+}
