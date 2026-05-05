@@ -32,9 +32,17 @@ export default function Login() {
       
       toast.success('Welcome to Kiss Me Restaurant!');
       navigate('/');
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to login. Please try again.');
+    } catch (error: any) {
+      console.error('Login Error:', error);
+      
+      if (error.code === 'auth/unauthorized-domain') {
+        const domain = window.location.hostname;
+        toast.error(`Domain "${domain}" is not authorized. Please add it to your Firebase Console under Authentication > Settings > Authorized domains.`, {
+          duration: 6000,
+        });
+      } else {
+        toast.error('Failed to login. Please try again.');
+      }
     }
   };
 
