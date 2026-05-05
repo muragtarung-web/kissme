@@ -73,6 +73,31 @@ export default function Menu() {
         </div>
       </div>
 
+      {/* Member Promo Banner */}
+      {user && (
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mb-16 bg-gold/10 border border-gold/20 p-8 flex flex-col md:flex-row items-center justify-between gap-6 overflow-hidden relative"
+        >
+          <div className="absolute -top-10 -right-10 opacity-5">
+            <ShoppingBag size={120} />
+          </div>
+          <div className="flex items-center gap-6">
+            <div className="w-14 h-14 bg-gold flex items-center justify-center text-black rounded-full shrink-0">
+              <Star size={28} className="fill-black" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold uppercase tracking-widest text-gold mb-1">Loyalty Exclusive: 2x Points</h3>
+              <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Earn double points on all "Hot Selection" items today only!</p>
+            </div>
+          </div>
+          <button className="btn-gold !py-3 whitespace-nowrap">
+            Redeem Points
+          </button>
+        </motion.div>
+      )}
+
       <div className="flex items-start gap-16">
         {/* Categories Sidebar */}
         <aside className="hidden lg:block w-48 sticky top-32 text-left">

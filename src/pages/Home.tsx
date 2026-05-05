@@ -1,14 +1,16 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
-import { ArrowRight, Music, Utensils, Calendar, MapPin, Heart } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowRight, Music, Utensils, Calendar, MapPin, Heart, Star, Gift, Crown, ChevronRight, Zap } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
+import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
 import { SiteSettings, Moment } from '../types';
 
 export default function Home() {
   const { t } = useLanguage();
+  const { user } = useAuth();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [featuredMoments, setFeaturedMoments] = useState<Moment[]>([]);
 
@@ -27,6 +29,106 @@ export default function Home() {
 
   return (
     <div className="space-y-24 pb-24 text-zinc-900 dark:text-[#F5F5F5]">
+      {/* Personalized Welcome for Customers */}
+      <AnimatePresence>
+        {user && (
+          <motion.section 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-7xl mx-auto px-6 pt-12"
+          >
+            <div className="luxury-card overflow-hidden !p-0">
+              <div className="flex flex-col md:flex-row">
+                {/* Points & Tier */}
+                <div className="p-8 bg-black md:w-1/3 flex flex-col justify-center items-center text-center space-y-4 border-r border-white/5">
+                  <div className="relative">
+                    <div className="w-24 h-24 rounded-full border-4 border-gold p-1">
+                      <div className="w-full h-full rounded-full bg-zinc-900 flex items-center justify-center text-gold">
+                        <Crown size={40} />
+                      </div>
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-gold text-black rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-widest">
+                      {user.tier}
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="text-white text-2xl font-serif italic">{user.displayName}</h3>
+                    <p className="text-white/40 text-[10px] uppercase tracking-widest font-bold mt-1">Loyalty Member</p>
+                  </div>
+                  <div className="pt-4 w-full">
+                    <div className="flex justify-between text-[10px] uppercase tracking-widest font-bold mb-2">
+                      <span className="text-white/60">Points Balance</span>
+                      <span className="text-gold">{user.points} pts</span>
+                    </div>
+                    <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-gold transition-all duration-1000" 
+                        style={{ width: `${Math.min((user.points / 1000) * 100, 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-[9px] text-white/30 text-right mt-2 uppercase tracking-tighter">
+                      {user.points < 1000 ? `${1000 - user.points} pts to Silver` : user.points < 5000 ? `${5000 - user.points} pts to Gold` : 'Max Tier Reached'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Exclusive Actions */}
+                <div className="p-8 flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Link to="/reservations" className="group">
+                    <div className="h-full luxury-card-sub p-6 hover:bg-white/[0.02] transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gold/10 rounded-lg flex items-center justify-center text-gold">
+                          <Star size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-white">Priority Booking</h4>
+                          <p className="text-[10px] text-white/40 uppercase mt-1">Skip the queue for tables</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={16} className="text-white/20 group-hover:text-gold group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </Link>
+
+                  <Link to="/menu" className="group">
+                    <div className="h-full luxury-card-sub p-6 hover:bg-white/[0.02] transition-all flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-primary">
+                          <Gift size={20} />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold uppercase tracking-widest text-white">Special Offers</h4>
+                          <p className="text-[10px] text-white/40 uppercase mt-1">Redeem your points</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={16} className="text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </Link>
+
+                  <div className="h-full luxury-card-sub p-6 bg-gold/5 flex items-center gap-4 border border-gold/10">
+                    <Zap size={20} className="text-gold" />
+                    <div>
+                      <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white">Guest Highlight</h4>
+                      <p className="text-[11px] text-white/60 leading-tight mt-1 italic">"Your last visit was 5 days ago. We've missed you!"</p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4">
+                     <div className="flex-1 luxury-card-sub p-4 flex flex-col justify-center text-center">
+                        <span className="text-[14px] font-serif italic text-gold">15% OFF</span>
+                        <span className="text-[8px] uppercase tracking-widest text-white/40">Birthday Month</span>
+                     </div>
+                     <div className="flex-1 luxury-card-sub p-4 flex flex-col justify-center text-center">
+                        <span className="text-[14px] font-serif italic text-gold">FREE TICKET</span>
+                        <span className="text-[8px] uppercase tracking-widest text-white/40">Next Event</span>
+                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+
       {/* Hero Section */}
       <section className="relative h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
@@ -108,6 +210,32 @@ export default function Home() {
           </motion.div>
         </div>
       </section>
+
+      {/* Guest CTA Section */}
+      {!user && (
+        <section className="max-w-7xl mx-auto px-6">
+          <div className="luxury-card bg-primary/10 border-primary/20 p-12 text-center relative overflow-hidden">
+            <div className="absolute -top-12 -left-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl" />
+            <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-gold/10 rounded-full blur-3xl" />
+            
+            <div className="relative z-10">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-6 block">Unlock More Experience</span>
+              <h2 className="text-5xl font-serif font-bold italic mb-6 text-zinc-900 dark:text-white">Join the <span className="text-gold">Kiss Me</span> Circle</h2>
+              <p className="max-w-xl mx-auto text-[11px] uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mb-10">
+                Register as a member to earn points on every visit, unlock exclusive seasonal menus, and gain priority access to our most sought-after events.
+              </p>
+              <div className="flex justify-center gap-6">
+                <Link to="/login" className="btn-primary">
+                  Sign Up Now
+                </Link>
+                <Link to="/menu" className="text-[10px] uppercase tracking-widest font-bold border-b border-white/20 pb-1 hover:border-gold transition-all flex items-center gap-2">
+                  Learn Benefits <ChevronRight size={14} />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Recommended Section */}
       <section className="max-w-7xl mx-auto px-6">
@@ -191,6 +319,66 @@ export default function Home() {
                 )}
               </motion.div>
             ))}
+          </div>
+        </section>
+      )}
+
+      {/* Member Exclusive Offers */}
+      {user && (
+        <section className="max-w-7xl mx-auto px-6">
+          <div className="luxury-card border-gold/20 relative overflow-hidden bg-gradient-to-br from-zinc-900 to-black">
+            <div className="absolute top-0 right-0 p-8 opacity-10">
+              <Star size={120} className="text-gold" />
+            </div>
+            
+            <div className="relative z-10">
+              <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-4 block">Membership Perk</span>
+              <h2 className="text-4xl font-serif font-bold italic mb-8">Exclusive Member <span className="text-white/20 uppercase text-2xl not-italic tracking-tighter">Offers</span></h2>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-6 luxury-card-sub border-gold/10 group cursor-pointer hover:border-gold/30 transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-gold/10 rounded flex items-center justify-center text-gold">
+                      <Zap size={20} />
+                    </div>
+                    <span className="text-[10px] font-bold text-gold bg-gold/10 px-2 py-1 rounded">Flash Deal</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-1">Buy 1 Take 1 Cocktails</h4>
+                  <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-4">Every Wednesday Night</p>
+                  <button className="text-[10px] text-gold uppercase tracking-widest font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    Claim Reward <ArrowRight size={12} />
+                  </button>
+                </div>
+
+                <div className="p-6 luxury-card-sub border-gold/10 group cursor-pointer hover:border-gold/30 transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-gold/10 rounded flex items-center justify-center text-gold">
+                      <Gift size={20} />
+                    </div>
+                    <span className="text-[10px] font-bold text-white/40 bg-white/5 px-2 py-1 rounded">200 pts</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-1">Free Signature Dessert</h4>
+                  <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-4">With total bill over ₱1,500</p>
+                  <button className="text-[10px] text-gold uppercase tracking-widest font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    Claim Reward <ArrowRight size={12} />
+                  </button>
+                </div>
+
+                <div className="p-6 luxury-card-sub border-gold/10 group cursor-pointer hover:border-gold/30 transition-all">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="w-10 h-10 bg-gold/10 rounded flex items-center justify-center text-gold">
+                      <Heart size={20} />
+                    </div>
+                    <span className="text-[10px] font-bold text-gold bg-gold/10 px-2 py-1 rounded">Member Only</span>
+                  </div>
+                  <h4 className="text-lg font-bold text-white mb-1">VIP Lounge Access</h4>
+                  <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold mb-4">Advance reservation required</p>
+                  <button className="text-[10px] text-gold uppercase tracking-widest font-bold flex items-center gap-2 group-hover:gap-4 transition-all">
+                    Claim Reward <ArrowRight size={12} />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
       )}

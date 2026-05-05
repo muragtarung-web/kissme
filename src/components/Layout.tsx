@@ -138,6 +138,36 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
+      {/* Mobile Bottom Bar for Authenticated Users */}
+      {user && (
+        <div className="md:hidden fixed bottom-12 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">
+          <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full px-6 py-4 flex items-center justify-between shadow-2xl">
+            <Link to="/" className="flex flex-col items-center gap-1 group">
+              <Sun size={20} className="text-white/40 group-hover:text-gold transition-colors" />
+              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Home</span>
+            </Link>
+            <Link to="/menu" className="flex flex-col items-center gap-1 group">
+              <ShoppingCart size={20} className="text-white/40 group-hover:text-gold transition-colors" />
+              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Order</span>
+            </Link>
+            <Link to="/reservations" className="absolute -top-6 left-1/2 -translate-x-1/2">
+              <div className="w-14 h-14 bg-gold rounded-full flex items-center justify-center text-black shadow-xl shadow-gold/20 border-4 border-black active:scale-90 transition-all">
+                <MenuIcon size={24} />
+              </div>
+            </Link>
+            <div className="w-14" /> {/* Spacer for central button */}
+            <Link to="/events" className="flex flex-col items-center gap-1 group">
+              <Award size={20} className="text-white/40 group-hover:text-gold transition-colors" />
+              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Events</span>
+            </Link>
+            <Link to="/profile" className="flex flex-col items-center gap-1 group">
+              <User size={20} className="text-white/40 group-hover:text-gold transition-colors" />
+              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Me</span>
+            </Link>
+          </div>
+        </div>
+      )}
+
       <footer className="bg-zinc-950 border-t border-zinc-900 py-12">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
