@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { auth, db } from '../lib/firebase';
+import { auth, db, handleFirestoreError, OperationType } from '../lib/firebase';
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { LogIn } from 'lucide-react';
@@ -32,19 +32,23 @@ export default function Login() {
           toast.error('Connection failed. Please ensure Cloud Firestore is enabled in your Firebase Console.', { duration: 5000 });
           return;
         }
-        throw getDocError;
+        handleFirestoreError(getDocError, OperationType.GET, 'users');
       }
       
-      if (!userSnap.exists()) {
-        await setDoc(userRef, {
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-          role: 'customer',
-          points: 0,
-          tier: 'Bronze',
-          createdAt: new Date().toISOString()
-        });
+      if (userSnap && !userSnap.exists()) {
+        try {
+          await setDoc(userRef, {
+            email: user.email,
+            displayName: user.displayName,
+            photoURL: user.photoURL,
+            role: 'customer',
+            points: 0,
+            tier: 'Bronze',
+            createdAt: new Date().toISOString()
+          });
+        } catch (writeError) {
+          handleFirestoreError(writeError, OperationType.WRITE, 'users');
+        }
       }
       
       toast.success('Welcome to Kiss Me Restaurant!');
