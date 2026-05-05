@@ -11,6 +11,7 @@ import Login from './pages/Login';
 import Profile from './pages/Profile';
 import { ThemeProvider } from './hooks/useTheme';
 import { Toaster } from 'react-hot-toast';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -50,6 +51,7 @@ export default function App() {
               border: '1px solid rgba(255, 255, 255, 0.1)'
             }
           }} />
+          <SpeedInsights />
         </BrowserRouter>
       </AuthProvider>
     </LanguageProvider>
