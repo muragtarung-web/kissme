@@ -5,26 +5,43 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
 import { db } from '../lib/firebase';
-import { collection, query, getDocs, limit, orderBy } from 'firebase/firestore';
-import { SiteSettings, Moment } from '../types';
+import { collection, query, getDocs, limit, orderBy, onSnapshot } from 'firebase/firestore';
+import { SiteSettings, Moment, Event as AppEvent, Product } from '../types';
+import { useLoading } from '../hooks/useLoading';
 
 export default function Home() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { showLoading, hideLoading } = useLoading();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [featuredMoments, setFeaturedMoments] = useState<Moment[]>([]);
+  const [events, setEvents] = useState<AppEvent[]>([]);
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+
+  const defaultHeroImage = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000";
 
   useEffect(() => {
-    async function fetchData() {
-      const settingsSnap = await getDocs(collection(db, 'settings'));
-      if (!settingsSnap.empty) {
-        setSettings({ id: settingsSnap.docs[0].id, ...settingsSnap.docs[0].data() } as SiteSettings);
-      }
-      
-      const momentsSnap = await getDocs(query(collection(db, 'moments'), orderBy('date', 'desc'), limit(4)));
-      setFeaturedMoments(momentsSnap.docs.map(d => ({ id: d.id, ...d.data() } as Moment)));
-    }
-    fetchData();
+    showLoading();
+    const unsubs = [
+      onSnapshot(collection(db, 'settings'), (snap) => {
+        if (!snap.empty) {
+          setSettings({ id: snap.docs[0].id, ...snap.docs[0].data() } as SiteSettings);
+        }
+      }),
+      onSnapshot(query(collection(db, 'moments'), orderBy('date', 'desc'), limit(4)), (snap) => {
+        setFeaturedMoments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Moment)));
+      }),
+      onSnapshot(query(collection(db, 'events'), orderBy('date'), limit(3)), (snap) => {
+        setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as AppEvent)));
+      }),
+      onSnapshot(query(collection(db, 'products'), limit(50)), (snap) => {
+        const allProds = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
+        setFeaturedProducts(allProds.filter(p => p.featured).slice(0, 4));
+      })
+    ];
+
+    hideLoading();
+    return () => unsubs.forEach(unsub => unsub());
   }, []);
 
   return (
@@ -133,33 +150,33 @@ export default function Home() {
       <section className="relative h-[90vh] flex items-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src={settings?.heroImage || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000"} 
+            src={settings?.heroImage || defaultHeroImage} 
             alt="Hero Background" 
-            className="w-full h-full object-cover opacity-60 scale-105"
+            className="w-full h-full object-cover opacity-50 scale-105"
             referrerPolicy="no-referrer"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0A] via-[#0A0A0A]/40 to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-left">
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8 }}
-            className="max-w-2xl"
+            className="max-w-3xl"
           >
-            <h1 className="text-7xl md:text-8xl font-serif font-bold leading-none mb-6 text-zinc-900 dark:text-white">
+            <h1 className="text-7xl md:text-9xl font-serif font-bold leading-[0.9] mb-6 text-white tracking-tighter">
               {settings?.heroTitle || t('heroTitle')} <br />
-              <span className="text-gold italic">{settings?.heroSubtitle || t('heroAesthetics')}</span>
+              <span className="text-gold italic font-light">{settings?.heroSubtitle || t('heroAesthetics')}</span>
             </h1>
-            <p className="text-sm uppercase tracking-[0.4em] text-white/60 mb-10 max-w-lg leading-loose">
+            <p className="text-xs uppercase tracking-[0.5em] text-white/40 mb-10 max-w-lg leading-loose font-bold">
               {t('heroTagline')}
             </p>
             <div className="flex flex-wrap gap-6">
-              <Link to="/menu" className="btn-primary group">
+              <Link to="/menu" className="btn-primary py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold">
                 {t('exploreMenu')}
               </Link>
-              <Link to="/reservations" className="btn-gold group">
+              <Link to="/reservations" className="bg-transparent border border-white/20 hover:border-gold hover:text-gold text-white py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold transition-all">
                 {t('bookTable')}
               </Link>
             </div>
@@ -220,7 +237,7 @@ export default function Home() {
             
             <div className="relative z-10">
               <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-6 block">Unlock More Experience</span>
-              <h2 className="text-5xl font-serif font-bold italic mb-6 text-zinc-900 dark:text-white">Join the <span className="text-gold">Kiss Me</span> Circle</h2>
+              <h2 className="text-5xl font-serif font-bold italic mb-6 text-white">Join the <span className="text-gold">Kiss me Store</span> Circle</h2>
               <p className="max-w-xl mx-auto text-[11px] uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mb-10">
                 Register as a member to earn points on every visit, unlock exclusive seasonal menus, and gain priority access to our most sought-after events.
               </p>
@@ -250,14 +267,9 @@ export default function Home() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            { name: 'Signature Steak', price: '₱850', img: 'https://images.unsplash.com/photo-1546833998-877b37c2e5c6?auto=format&fit=crop&q=80&w=600' },
-            { name: 'Grilled Seafood Platter', price: '₱1,200', img: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&q=80&w=600' },
-            { name: 'Crispy Pata Special', price: '₱750', img: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&q=80&w=600' },
-            { name: 'House Pasta', price: '₱450', img: 'https://images.unsplash.com/photo-1473093226795-af9932fe5856?auto=format&fit=crop&q=80&w=600' },
-          ].map((item, id) => (
+          {featuredProducts.length > 0 ? featuredProducts.map((item, id) => (
             <motion.div 
-              key={id}
+              key={item.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ delay: id * 0.1 }}
@@ -266,16 +278,107 @@ export default function Home() {
             >
               <div className="aspect-[4/5] overflow-hidden rounded-xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-700">
                 <img 
-                  src={item.img} 
+                  src={item.image} 
                   alt={item.name} 
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">{item.price}</p>
-              <h4 className="text-xl font-serif italic mb-1 text-zinc-900 dark:text-white">{item.name}</h4>
+              <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">₱{item.price}</p>
+              <h4 className="text-xl font-serif italic mb-1 text-white">{item.name}</h4>
             </motion.div>
-          ))}
+          )) : (
+            <div className="col-span-full py-20 text-center">
+              <p className="text-[10px] uppercase tracking-[0.4em] text-white/20 font-bold">New selection arriving soon</p>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Upcoming Happenings Section */}
+      <section className="max-w-7xl mx-auto px-6">
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 px-2 gap-6">
+          <div>
+            <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-3 block">Live Terminal</span>
+            <h2 className="text-5xl font-serif font-bold italic">Upcoming <span className="text-zinc-200 dark:text-white/20">Happenings</span></h2>
+          </div>
+          <Link to="/events" className="text-[10px] uppercase tracking-widest font-bold border-b border-primary text-primary pb-1 hover:text-gold hover:border-gold transition-all">
+            See All Events
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {events.length > 0 ? events.map((event, idx) => (
+            <motion.div 
+              key={event.id}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.15 }}
+              viewport={{ once: true }}
+              className="group luxury-card !p-0 overflow-hidden flex flex-col"
+            >
+              <div className="aspect-video relative overflow-hidden bg-zinc-900 border-b border-white/5">
+                <img 
+                  src={event.img || 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024'} 
+                  alt={event.title} 
+                  className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024';
+                  }}
+                />
+                <div className="absolute top-4 left-4">
+                  <span className="bg-primary px-3 py-1 text-[9px] font-bold uppercase tracking-widest text-white shadow-xl">Live Terminal</span>
+                </div>
+              </div>
+              <div className="p-8 flex-1 flex flex-col items-start">
+                <div className="flex items-center gap-4 mb-4">
+                   <span className="text-gold text-[9px] font-bold uppercase tracking-[0.3em] flex items-center gap-2">
+                      <Music size={12} /> Soundscape
+                   </span>
+                   <span className="text-zinc-400 dark:text-white/20 text-[9px] font-bold uppercase tracking-[0.3em]">{event.date}</span>
+                </div>
+                <h3 className="text-2xl font-serif font-bold italic mb-4 text-zinc-900 dark:text-white leading-tight">{event.title}</h3>
+                <p className="text-zinc-500 dark:text-white/40 text-[10px] uppercase tracking-widest font-bold leading-loose line-clamp-2 mb-8">{event.desc}</p>
+                <div className="mt-auto w-full pt-6 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gold">{event.time}</span>
+                  <Link to="/events" className="text-zinc-900 dark:text-white text-[9px] font-bold uppercase tracking-[0.3em] hover:text-gold transition-colors flex items-center gap-2 group/btn">
+                    RSVP <ChevronRight size={10} className="group-hover/btn:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
+              </div>
+            </motion.div>
+          )) : (
+            <>
+              {/* Static Fallback Event if DB is empty */}
+              <motion.div 
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                className="group luxury-card !p-0 overflow-hidden flex flex-col lg:col-span-3 lg:flex-row h-72"
+              >
+                <div className="lg:w-1/3 relative h-full overflow-hidden bg-zinc-900">
+                  <img 
+                    src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024" 
+                    alt="Coming Soon" 
+                    className="w-full h-full object-cover grayscale opacity-50"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-gold uppercase tracking-[0.5em] text-[10px] font-bold border border-gold/40 px-6 py-2 bg-black/40 backdrop-blur-sm">Coming Soon</span>
+                  </div>
+                </div>
+                <div className="lg:w-2/3 p-12 flex flex-col justify-center items-start text-left">
+                  <span className="text-gold text-[10px] font-bold uppercase tracking-[0.4em] mb-4">Seasonal Feature</span>
+                  <h3 className="text-4xl font-serif font-bold italic mb-4 text-zinc-900 dark:text-white">The Grand Anniversary <span className="text-zinc-200 dark:text-white/20 uppercase tracking-tighter not-italic text-2xl">Terminal</span></h3>
+                  <p className="text-zinc-500 dark:text-white/40 text-[11px] uppercase tracking-widest font-bold leading-loose max-w-lg">
+                    We are currently curating our next major culinary and musical experience. New events are scheduled and posted weekly.
+                  </p>
+                  <Link to="/events" className="mt-8 text-[10px] text-gold uppercase tracking-widest font-bold border-b border-gold pb-1 hover:text-white hover:border-white transition-all flex items-center gap-2">
+                    Check Calendar <ArrowRight size={14} />
+                  </Link>
+                </div>
+              </motion.div>
+            </>
+          )}
         </div>
       </section>
 
@@ -303,9 +406,12 @@ export default function Home() {
                 className="group relative aspect-[4/5] rounded-2xl overflow-hidden bg-zinc-900"
               >
                 <img 
-                  src={moment.imageUrl} 
+                  src={moment.imageUrl || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=1000'} 
                   alt={moment.title} 
                   className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=1000';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-80" />
                 <div className="absolute bottom-0 left-0 right-0 p-6 translate-y-4 group-hover:translate-y-0 transition-transform">
@@ -384,26 +490,26 @@ export default function Home() {
       )}
 
       {/* Location Section */}
-      <section className="bg-zinc-50 dark:bg-zinc-950 border-y border-zinc-200 dark:border-zinc-800 py-24">
+      <section className="bg-black border-y border-white/5 py-24">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2">
-            <h2 className="text-4xl font-serif font-bold mb-8 text-zinc-900 dark:text-white">Visit Us Today</h2>
+            <h2 className="text-4xl font-serif font-bold mb-8 text-white">Visit Us Today</h2>
             <div className="space-y-6">
               <div className="flex gap-4">
                 <MapPin className="text-gold shrink-0" />
-                <p className="text-zinc-600 dark:text-zinc-300">National Highway, Tagoloan, Misamis Oriental, Philippines</p>
+                <p className="text-white/60">National Highway, Tagoloan, Misamis Oriental, Philippines</p>
               </div>
               <div className="flex gap-4">
                 <Calendar className="text-gold shrink-0" />
                 <div>
-                  <p className="text-zinc-900 dark:text-zinc-300 font-bold">Open Daily</p>
-                  <p className="text-zinc-500 dark:text-zinc-400">10:00 AM - 12:00 MN (Sun-Thu)</p>
-                  <p className="text-zinc-500 dark:text-zinc-400">10:00 AM - 02:00 AM (Fri-Sat)</p>
+                  <p className="text-white font-bold">Open Daily</p>
+                  <p className="text-white/40">10:00 AM - 12:00 MN (Sun-Thu)</p>
+                  <p className="text-white/40">10:00 AM - 02:00 AM (Fri-Sat)</p>
                 </div>
               </div>
             </div>
           </div>
-          <div className="md:w-1/2 w-full aspect-video rounded-3xl overflow-hidden grayscale contrast-125 opacity-70 border border-zinc-800">
+          <div className="md:w-1/2 w-full aspect-video rounded-3xl overflow-hidden grayscale contrast-125 opacity-70 border border-white/10">
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15783.332066827376!2d124.7470634!3d8.5158671!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32ffbd23c10a4023%3A0x6d8f5c9e4367c30a!2sTagoloan%2C%20Misamis%20Oriental!5e0!3m2!1sen!2sph!4v1714350000000!5m2!1sen!2sph"
               className="w-full h-full border-0"

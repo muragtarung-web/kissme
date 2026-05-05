@@ -1,6 +1,6 @@
 {
-  "name": "kissmetagoloan.com",
-  "description": "Enterprise-level management and marketing platform for Kiss Me Store & Food Corner, featuring real-time POS, ordering, event management, and social CMS.",
+  "name": "Kiss me Store",
+  "description": "Enterprise-level management and marketing platform for Kiss me Store & Food Corner, featuring real-time POS, ordering, event management, and social CMS.",
   "requestFramePermissions": [
     "camera",
     "microphone",

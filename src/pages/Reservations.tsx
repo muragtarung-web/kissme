@@ -5,8 +5,10 @@ import toast from 'react-hot-toast';
 import { db, auth } from '../lib/firebase';
 import { collection, addDoc } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
+import { useLoading } from '../hooks/useLoading';
 
 export default function Reservations() {
+  const { showLoading, hideLoading } = useLoading();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     date: '',
@@ -26,7 +28,7 @@ export default function Reservations() {
     }
 
     try {
-      toast.loading('Confirming reservation...', { id: 'reserve' });
+      showLoading('Baymax is securing your digital seat...');
       await addDoc(collection(db, 'reservations'), {
         ...formData,
         customerId: auth.currentUser.uid,
@@ -34,10 +36,12 @@ export default function Reservations() {
         createdAt: new Date()
       });
       setStep(3);
-      toast.success('Reservation request submitted!', { id: 'reserve' });
+      toast.success('Reservation request submitted!');
     } catch (error) {
       handleFirestoreError(error, OperationType.CREATE, 'reservations');
-      toast.error('Booking failed', { id: 'reserve' });
+      toast.error('Booking failed');
+    } finally {
+      hideLoading();
     }
   };
 
@@ -45,7 +49,7 @@ export default function Reservations() {
     <div className="max-w-4xl mx-auto px-4 py-24 text-zinc-900 dark:text-white">
       <div className="text-center mb-16">
         <h1 className="text-5xl font-serif font-bold italic mb-4">Reserve Your <span className="text-gold">Moment</span></h1>
-        <p className="text-zinc-500 dark:text-white/40">Secure your table at Kiss Me. We look forward to serving you.</p>
+        <p className="text-zinc-500 dark:text-white/40">Secure your table at Kiss me Store. We look forward to serving you.</p>
       </div>
 
       <div className="luxury-card overflow-hidden !p-0 shadow-none">

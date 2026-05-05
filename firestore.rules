@@ -16,8 +16,7 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // In a real app, we'd check a trusted role field. 
-      // For this session, we'll allow the user email as a fallback.
+      // Prioritize explicit admin role, fallback to hardcoded dev email for setup
       return isSignedIn() && (
         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
@@ -37,25 +36,51 @@ service cloud.firestore {
       return resource.data;
     }
 
-    // Entities Validations
+    // --- Validation Helpers ---
+
     function isValidUser(data) {
       return data.email is string && data.email.size() > 0 &&
-             data.displayName is string &&
+             (data.get('displayName', null) == null || data.displayName is string) &&
+             (data.get('photoURL', null) == null || data.photoURL is string) &&
              data.role in ['customer', 'admin', 'staff'] &&
              data.points is number &&
-             data.tier in ['Bronze', 'Silver', 'Gold'];
+             data.tier in ['Bronze', 'Silver', 'Gold'] &&
+             (data.get('createdAt', null) == null || data.createdAt is string);
+    }
+
+    function isValidCategory(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.order is number &&
+             data.active is bool;
     }
 
     function isValidProduct(data) {
       return data.name is string && data.name.size() > 0 &&
-             data.price is number && data.price >= 0 &&
+             data.price is number &&
              data.categoryId is string &&
-             (!('stock' in data) || data.stock is number) &&
-             (!('trackInventory' in data) || data.trackInventory is bool);
+             (data.get('description', null) == null || data.description is string) &&
+             (data.get('image', null) == null || data.image is string) &&
+             (data.get('available', null) == null || data.available is bool) &&
+             (data.get('stock', null) == null || data.stock is number) &&
+             (data.get('trackInventory', null) == null || data.trackInventory is bool);
     }
 
-    function isValidCategory(data) {
-      return data.name is string && data.name.size() > 0;
+    function isValidOrder(data) {
+      return (data.customerId == request.auth.uid || data.customerId == 'Terminal') &&
+             data.total is number &&
+             data.status in ['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'] &&
+             data.items is list &&
+             (data.get('type', null) == null || data.type in ['dine-in', 'pickup', 'delivery', 'advance', 'bulk', 'catering', 'Terminal']) &&
+             (data.get('paymentMethod', null) == null || data.paymentMethod is string);
+    }
+
+    function isValidReservation(data) {
+      return data.customerId == request.auth.uid &&
+             data.date is string &&
+             data.time is string &&
+             data.guests is string && // UI sends string like "2" or "1-2"
+             data.type in ['table', 'event', 'indoor', 'outdoor'] &&
+             data.status in ['pending', 'confirmed', 'cancelled'];
     }
 
     function isValidEvent(data) {
@@ -64,107 +89,80 @@ service cloud.firestore {
              data.time is string;
     }
 
-    function isValidMoment(data) {
-      return data.title is string && data.title.size() > 0 &&
-             data.imageUrl is string && data.imageUrl.size() > 0;
-    }
-
-    function isValidReminder(data) {
-      return data.eventId is string && data.message is string &&
-             data.scheduledAt is string && data.type in ['email', 'in-app', 'both'];
-    }
-
     function isValidNotification(data) {
-      return data.userId is string && data.title is string &&
-             data.message is string && data.read is bool;
+      return data.userId is string &&
+             data.title is string &&
+             data.read is bool;
     }
 
-    function isValidSettings(data) {
-      return data.heroTitle is string && data.heroTitle.size() > 0;
-    }
+    // --- Collection Rules ---
 
-    function isValidOrder(data) {
-      return (data.customerId == request.auth.uid || data.customerId == 'Terminal') &&
-             data.total is number &&
-             data.status in ['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'] &&
-             (!('statusHistory' in data) || data.statusHistory is list);
-    }
-
-    // 1. Users Collection
     match /users/{userId} {
-      // isOwner checks for uid match
       allow get: if isOwner(userId) || isAdmin();
       allow list: if isAdmin();
       allow create: if isOwner(userId) && isValidUser(incoming());
-      allow update: if (isOwner(userId) && isValidUser(incoming()) && (
-        // Prevent role change by user
-        incoming().role == existing().role &&
-        // Allow updating points, tier, and profile
-        incoming().diff(existing()).affectedKeys().hasOnly(['points', 'tier', 'displayName', 'photoURL', 'savedAddresses'])
-      )) || isAdmin();
+      allow update: if isAdmin() || (
+        isOwner(userId) && (
+          // Standard users can't change their role
+          incoming().role == existing().role &&
+          // Standard users can't change their points directly (usually)
+          // But allow tier/points for this app's logic if requested.
+          // Let's restrict it to profile fields mainly.
+          incoming().diff(existing()).affectedKeys().hasOnly(['displayName', 'photoURL', 'savedAddresses'])
+        )
+      );
     }
 
-    // 2. Categories Collection
     match /categories/{categoryId} {
       allow read: if true;
       allow write: if isAdmin() && isValidCategory(incoming());
     }
 
-    // 3. Products Collection
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin() && isValidProduct(incoming());
     }
 
-    // 4. Events Collection
+    match /orders/{orderId} {
+      allow get: if isOwner(existing().customerId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn() && isValidOrder(incoming());
+      allow update, delete: if isAdmin();
+    }
+
+    match /reservations/{resId} {
+      allow get: if isOwner(existing().customerId) || isAdmin();
+      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
+      allow create: if isSignedIn() && isValidReservation(incoming());
+      allow update, delete: if isAdmin();
+    }
+
     match /events/{eventId} {
       allow read: if true;
       allow write: if isAdmin() && isValidEvent(incoming());
     }
 
-    // 5. Orders Collection
-    match /orders/{orderId} {
-      // On get, resource is available.
-      allow get: if isOwner(existing().customerId) || isAdmin();
-      // On list, resource.data is checked per document.
-      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if isSignedIn() && isValidOrder(incoming());
-      allow update: if isAdmin(); // Only admins can update orders (e.g., status changes)
-      allow delete: if isAdmin();
-    }
-
-    // 6. Reservations
-    match /reservations/{resId} {
-      allow get: if isOwner(existing().customerId) || isAdmin();
-      allow list: if isAdmin() || (isSignedIn() && resource.data.customerId == request.auth.uid);
-      allow create: if isSignedIn() && incoming().customerId == request.auth.uid;
-      allow update: if isAdmin();
-      allow delete: if isAdmin();
-    }
-
-    // 7. Moments
     match /moments/{momentId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidMoment(incoming());
+      allow write: if isAdmin();
     }
 
-    // 8. Settings
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if isAdmin() && isValidSettings(incoming());
+      allow write: if isAdmin();
     }
 
-    // 9. Reminders
     match /reminders/{reminderId} {
-      allow read: if isAdmin();
-      allow write: if isAdmin() && isValidReminder(incoming());
+      allow read, write: if isAdmin();
     }
 
-    // 10. Notifications
     match /notifications/{notificationId} {
-      allow read: if isSignedIn() && (resource == null || resource.data.userId == request.auth.uid || isAdmin());
-      allow write: if (isAdmin() && isValidNotification(incoming())) || 
-                   (isSignedIn() && incoming().userId == request.auth.uid && incoming().diff(existing()).affectedKeys().hasOnly(['read']));
+      allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAdmin();
+      allow update: if isSignedIn() && resource.data.userId == request.auth.uid && 
+                   incoming().diff(existing()).affectedKeys().hasOnly(['read']);
+      allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
     }
   }
 }

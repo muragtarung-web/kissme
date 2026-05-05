@@ -74,6 +74,27 @@ export interface Moment {
   featured?: boolean;
 }
 
+export interface Staff {
+  id: string;
+  name: string;
+  role: string;
+  email: string;
+  phone: string;
+  status: 'active' | 'on-leave' | 'inactive';
+  joinedAt: string;
+}
+
+export interface Shift {
+  id: string;
+  staffId: string;
+  staffName: string;
+  date: string;
+  startTime: string;
+  endTime: string;
+  position: string;
+  note?: string;
+}
+
 export interface SiteSettings {
   id: string;
   heroTitle: string;
@@ -91,6 +112,11 @@ export interface SiteSettings {
   contactPhone: string;
   address: string;
   openingHours: string;
+  delicacies?: {
+    name: string;
+    price: string;
+    image: string;
+  }[];
 }
 
 export interface Reservation {

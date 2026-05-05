@@ -4,9 +4,11 @@ import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { LogIn } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { useLoading } from '../hooks/useLoading';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { showLoading, hideLoading } = useLoading();
 
   const handleGoogleLogin = async () => {
     // Try to open in new tab if the user is inside an iframe
@@ -18,6 +20,7 @@ export default function Login() {
 
     const provider = new GoogleAuthProvider();
     try {
+      showLoading('Authenticating with Baymax secure gateway...');
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
       
@@ -36,12 +39,13 @@ export default function Login() {
       }
       
       if (userSnap && !userSnap.exists()) {
+        const role = user.email === 'liebedel7@gmail.com' ? 'admin' : 'customer';
         try {
           await setDoc(userRef, {
             email: user.email,
             displayName: user.displayName,
             photoURL: user.photoURL,
-            role: 'customer',
+            role,
             points: 0,
             tier: 'Bronze',
             createdAt: new Date().toISOString()
@@ -51,7 +55,7 @@ export default function Login() {
         }
       }
       
-      toast.success('Welcome to Kiss Me Restaurant!');
+      toast.success('Welcome to Kiss me Store!');
       navigate('/');
     } catch (error: any) {
       console.error('Login Error:', error);
@@ -64,6 +68,8 @@ export default function Login() {
       } else {
         toast.error('Failed to login. Please try again.');
       }
+    } finally {
+      hideLoading();
     }
   };
 
@@ -71,7 +77,7 @@ export default function Login() {
     <div className="min-h-[70vh] flex flex-col items-center justify-center px-4">
       <div className="luxury-card w-full max-w-md text-center">
         <h2 className="text-3xl font-serif font-bold mb-4 text-white">Welcome Back</h2>
-        <p className="text-white/40 mb-8 uppercase text-[10px] tracking-[0.2em] font-bold">Join the exclusive circle of Kiss Me Food Corner</p>
+        <p className="text-white/40 mb-8 uppercase text-[10px] tracking-[0.2em] font-bold">Join the exclusive circle of Kiss me Store</p>
         
         <button 
           onClick={handleGoogleLogin}

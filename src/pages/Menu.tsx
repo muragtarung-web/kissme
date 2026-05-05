@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, getDocs, where, orderBy } from 'firebase/firestore';
+import { collection, query, getDocs, where, orderBy, onSnapshot } from 'firebase/firestore';
 import { Product, Category } from '../types';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, Filter, ShoppingBag } from 'lucide-react';
+import { Search, Filter, ShoppingBag, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../hooks/useLanguage';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
+import { useLoading } from '../hooks/useLoading';
 
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 
 export default function Menu() {
+  const { showLoading, hideLoading } = useLoading();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -22,20 +24,25 @@ export default function Menu() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const catSnap = await getDocs(query(collection(db, 'categories'), orderBy('order')));
-        const prodSnap = await getDocs(collection(db, 'products'));
-        
-        setCategories(catSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Category));
-        setProducts(prodSnap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Product));
-      } catch (error) {
-        handleFirestoreError(error, OperationType.GET, 'menu_data');
-      } finally {
+    showLoading('Fetching culinary entities...');
+    const unsubs = [
+      onSnapshot(query(collection(db, 'categories'), orderBy('order')), (snap) => {
+        setCategories(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Category));
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, 'categories');
+      }),
+      onSnapshot(collection(db, 'products'), (snap) => {
+        setProducts(snap.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Product));
         setLoading(false);
-      }
-    }
-    fetchData();
+        hideLoading();
+      }, (error) => {
+        handleFirestoreError(error, OperationType.GET, 'products');
+        setLoading(false);
+        hideLoading();
+      })
+    ];
+
+    return () => unsubs.forEach(unsub => unsub());
   }, []);
 
   const filteredProducts = products.filter(p => {
@@ -150,6 +157,9 @@ export default function Menu() {
                         alt={p.name} 
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000"
                         referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600';
+                        }}
                       />
                       {p.bestSeller && (
                         <div className="absolute top-6 left-6 bg-primary text-white text-[9px] font-bold px-3 py-1 tracking-widest uppercase shadow-xl">

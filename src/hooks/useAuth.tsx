@@ -29,9 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (docSnap.exists()) {
           const data = docSnap.data();
           const points = data.points || 0;
+          // Ensure project owner is always admin if not specifically set
+          const role = (fbUser.email === 'liebedel7@gmail.com') ? 'admin' : (data.role || 'customer');
           setUser({ 
             id: fbUser.uid, 
             ...data, 
+            role,
             points,
             tier: calculateTier(points) 
           } as AppUser);
@@ -40,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             id: fbUser.uid,
             email: fbUser.email || '',
             displayName: fbUser.displayName || 'Guest',
-            role: 'customer',
+            role: fbUser.email === 'liebedel7@gmail.com' ? 'admin' : 'customer',
             points: 0,
             tier: 'Bronze',
             createdAt: new Date().toISOString()

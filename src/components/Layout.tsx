@@ -35,7 +35,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
           <Link to="/" className="flex flex-col">
-            <span className="text-2xl font-serif font-bold text-gold tracking-tight leading-none uppercase">KISS ME</span>
+            <span className="text-2xl font-serif font-bold text-gold tracking-tight leading-none uppercase">Kiss me Store</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 font-bold mt-1">Food Corner</span>
           </Link>
 
@@ -171,7 +171,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <footer className="bg-zinc-950 border-t border-zinc-900 py-12">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
           <div className="col-span-1 md:col-span-2">
-            <h3 className="text-2xl font-serif font-bold text-gold mb-4">KISS ME</h3>
+            <h3 className="text-2xl font-serif font-bold text-gold mb-4">Kiss me Store</h3>
             <p className="text-zinc-400 max-w-md">
               National Highway, Tagoloan, Misamis Oriental. Your premier destination for fine food, live music, and unforgettable events.
             </p>
@@ -194,7 +194,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-zinc-900 text-center text-sm text-zinc-600">
-          © 2026 Kiss Me Store & Food Corner. All rights reserved.
+          © 2026 Kiss me Store & Food Corner. All rights reserved.
         </div>
       </footer>
     </div>
