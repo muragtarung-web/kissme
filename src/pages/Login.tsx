@@ -16,7 +16,18 @@ export default function Login() {
       
       // Save user to firestore if first time
       const userRef = doc(db, 'users', user.uid);
-      const userSnap = await getDoc(userRef);
+      let userSnap;
+      try {
+        userSnap = await getDoc(userRef);
+      } catch (getDocError: any) {
+        if (getDocError.message?.includes('client is offline')) {
+          console.warn('Firestore is reporting offline during login checking.');
+          toast.success('Welcome back! (Syncing in background)');
+          navigate('/');
+          return;
+        }
+        throw getDocError;
+      }
       
       if (!userSnap.exists()) {
         await setDoc(userRef, {
