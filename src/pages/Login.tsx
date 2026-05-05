@@ -9,6 +9,13 @@ export default function Login() {
   const navigate = useNavigate();
 
   const handleGoogleLogin = async () => {
+    // Try to open in new tab if the user is inside an iframe
+    if (window.self !== window.top) {
+      toast('Opening login in a new tab for security...', { icon: '↗️' });
+      const newWindow = window.open(window.location.href, '_blank');
+      if (newWindow) return;
+    }
+
     const provider = new GoogleAuthProvider();
     try {
       const result = await signInWithPopup(auth, provider);
@@ -22,8 +29,7 @@ export default function Login() {
       } catch (getDocError: any) {
         if (getDocError.message?.includes('client is offline')) {
           console.warn('Firestore is reporting offline during login checking.');
-          toast.success('Welcome back! (Syncing in background)');
-          navigate('/');
+          toast.error('Connection failed. Please ensure Cloud Firestore is enabled in your Firebase Console.', { duration: 5000 });
           return;
         }
         throw getDocError;
@@ -69,6 +75,13 @@ export default function Login() {
         >
           <img src="https://www.google.com/favicon.ico" alt="google" className="w-6 h-6 grayscale group-hover:grayscale-0 transition-all" />
           Continue with Google
+        </button>
+
+        <button 
+          onClick={() => window.open(window.location.href, '_blank')}
+          className="mt-4 text-[10px] text-white/40 hover:text-white uppercase tracking-widest font-bold underline underline-offset-4"
+        >
+          Login issues? Try opening in a new tab
         </button>
         
         <p className="mt-8 text-[9px] text-white/20 uppercase tracking-widest font-bold">
