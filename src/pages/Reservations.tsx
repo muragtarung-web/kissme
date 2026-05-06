@@ -56,12 +56,23 @@ export default function Reservations() {
 
     try {
       showLoading('Baymax is securing your digital seat...');
-      await addDoc(collection(db, 'reservations'), {
+      const resRef = await addDoc(collection(db, 'reservations'), {
         ...formData,
         customerId: auth.currentUser.uid,
         status: 'pending',
         createdAt: new Date(),
         email: auth.currentUser.email
+      });
+
+      // Add in-app notification for the customer
+      await addDoc(collection(db, 'inAppNotifications'), {
+        userId: auth.currentUser.uid,
+        title: 'Reservation Requested',
+        message: `Your reservation request for Table ${formData.tableNumber} on ${formData.date} at ${formData.time} has been received.`,
+        read: false,
+        createdAt: new Date(),
+        type: 'reservation',
+        referenceId: resRef.id
       });
 
       // Send confirmation email via backend API

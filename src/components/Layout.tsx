@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, limit } from 'firebase/firestore';
 import { InAppNotification } from '../types';
+import toast from 'react-hot-toast';
 import CartDrawer from './CartDrawer';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -38,10 +39,38 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       limit(20)
     );
 
+    let firstLoad = true;
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification));
+      
+      // If there are new unread notifications that were just added (after first load)
+      if (!firstLoad) {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === 'added') {
+            const data = change.doc.data() as InAppNotification;
+            if (!data.read) {
+              toast.success(data.title + ': ' + data.message, {
+                icon: '🔔',
+                duration: 5000,
+                position: 'top-right',
+                style: {
+                  background: '#0D0D0D',
+                  color: '#fff',
+                  border: '1px solid rgba(255,215,0,0.2)',
+                  fontSize: '11px',
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }
+              });
+            }
+          }
+        });
+      }
+      
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
+      firstLoad = false;
     });
 
     return () => unsubscribe();

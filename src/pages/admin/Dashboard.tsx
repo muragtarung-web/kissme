@@ -468,6 +468,8 @@ export default function AdminDashboard() {
       
       selectedOrderIds.forEach(id => {
         const orderRef = doc(db, 'orders', id);
+        const order = orders.find(o => o.id === id);
+        
         batch.update(orderRef, { 
           status,
           statusHistory: arrayUnion({
@@ -476,6 +478,20 @@ export default function AdminDashboard() {
             note: `Bulk Status Update`
           })
         });
+
+        // Add notification for each order in the batch
+        if (order && order.customerId) {
+          const notifRef = doc(collection(db, 'inAppNotifications'));
+          batch.set(notifRef, {
+            userId: order.customerId,
+            title: 'Order Tracking Update',
+            message: `Order #${id.slice(-6)} status has been updated to: ${status.toUpperCase()} via bulk process.`,
+            read: false,
+            createdAt: new Date(),
+            type: 'order',
+            referenceId: id
+          });
+        }
       });
       
       await batch.commit();
@@ -986,6 +1002,7 @@ export default function AdminDashboard() {
             label="Orders Center" 
             active={view === 'orders'} 
             onClick={() => setView('orders')}
+            badge={orders.filter(o => o.status === 'pending').length}
           />
           <AdminNavItem 
             icon={<BarChart3 size={14} />} 
@@ -1010,6 +1027,7 @@ export default function AdminDashboard() {
             label="Reservations Center" 
             active={view === 'reservations'} 
             onClick={() => setView('reservations')}
+            badge={reservations.filter(r => r.status === 'pending').length}
           />
           <AdminNavItem 
             icon={<Grid size={14} />} 
@@ -3282,11 +3300,11 @@ function ImageUploadField({ label, currentImage, onUpload }: { label: string, cu
   );
 }
 
-function AdminNavItem({ icon, label, active = false, onClick }: any) {
+function AdminNavItem({ icon, label, active = false, onClick, badge }: any) {
   return (
     <div 
       onClick={onClick}
-      className={`p-3 text-[10px] uppercase tracking-widest cursor-pointer transition-all flex items-center gap-3 rounded-xl border border-transparent ${
+      className={`p-3 text-[10px] uppercase tracking-widest cursor-pointer transition-all flex items-center gap-3 rounded-xl border border-transparent group ${
         active 
           ? 'text-gold bg-gold/5 border-gold/10 font-bold' 
           : 'text-white/40 hover:text-white hover:bg-white/5'
@@ -3296,7 +3314,12 @@ function AdminNavItem({ icon, label, active = false, onClick }: any) {
         {icon}
       </div>
       <span>{label}</span>
-      {active && <div className="ml-auto w-1 h-4 bg-gold rounded-full" />}
+      {badge !== undefined && badge > 0 && (
+        <span className="ml-auto flex items-center justify-center min-w-[18px] h-[18px] px-1 bg-gold text-black rounded-full text-[9px] font-black animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.3)]">
+          {badge}
+        </span>
+      )}
+      {active && badge === undefined && <div className="ml-auto w-1 h-4 bg-gold rounded-full" />}
     </div>
   );
 }

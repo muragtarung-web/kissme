@@ -31,7 +31,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
 
     try {
       showLoading('Transmitting order to culinary team...');
-      await addDoc(collection(db, 'orders'), {
+      const orderRef = await addDoc(collection(db, 'orders'), {
         items: items.map(item => ({
           productId: item.product.id,
           name: item.product.name,
@@ -50,6 +50,17 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           timestamp: new Date(),
           note: 'Order submitted via mobile terminal'
         }]
+      });
+
+      // Add in-app notification for the customer
+      await addDoc(collection(db, 'inAppNotifications'), {
+        userId: auth.currentUser.uid,
+        title: 'Order Received',
+        message: `Your order #${orderRef.id.slice(-6)} has been received and is being processed by our kitchen.`,
+        read: false,
+        createdAt: new Date(),
+        type: 'order',
+        referenceId: orderRef.id
       });
 
       onClose();
