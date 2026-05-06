@@ -10,10 +10,12 @@ import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { useLoading } from '../hooks/useLoading';
 
 import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
 import { useNavigate } from 'react-router-dom';
 
 export default function Menu() {
   const { showLoading, hideLoading } = useLoading();
+  const { addToCart: addToCartContext } = useCart();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -57,7 +59,18 @@ export default function Menu() {
       navigate('/login');
       return;
     }
-    toast.success(`${t('addToCart')} ${product.name}`);
+    addToCartContext(product);
+    toast.success(`${t('addToCart')} ${product.name}`, {
+      icon: '🛒',
+      style: {
+        background: '#D4AF37',
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: '10px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em'
+      }
+    });
   };
 
   return (

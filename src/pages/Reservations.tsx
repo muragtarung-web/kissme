@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, Users, Clock, MapPin, CheckCircle } from 'luc
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { db, auth } from '../lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { useLoading } from '../hooks/useLoading';
 
@@ -14,16 +14,43 @@ export default function Reservations() {
     date: '',
     time: '11:00 AM',
     guests: '2',
-    type: 'table',
+    type: 'indoor',
+    tableNumber: '',
     notes: '',
     fullName: '',
     phone: ''
   });
 
+  const checkAvailability = async () => {
+    if (!formData.date || !formData.time || !formData.tableNumber) return true;
+    
+    try {
+      const q = query(
+        collection(db, 'reservations'),
+        where('date', '==', formData.date),
+        where('time', '==', formData.time),
+        where('tableNumber', '==', formData.tableNumber),
+        where('status', 'in', ['pending', 'confirmed', 'booked'])
+      );
+      
+      const snap = await getDocs(q);
+      return snap.empty;
+    } catch (error) {
+      console.error('Availability check failed:', error);
+      return true;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!auth.currentUser) {
       toast.error('Session expired. Please login again.');
+      return;
+    }
+
+    const isAvailable = await checkAvailability();
+    if (!isAvailable) {
+      toast.error(`Table ${formData.tableNumber} is already reserved for this time.`);
       return;
     }
 
@@ -33,8 +60,28 @@ export default function Reservations() {
         ...formData,
         customerId: auth.currentUser.uid,
         status: 'pending',
-        createdAt: new Date()
+        createdAt: new Date(),
+        email: auth.currentUser.email
       });
+
+      // Send confirmation email via backend API
+      try {
+        await fetch('/api/send-reservation-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: auth.currentUser.email,
+            fullName: formData.fullName,
+            date: formData.date,
+            time: formData.time,
+            tableNumber: formData.tableNumber,
+            guests: formData.guests
+          })
+        });
+      } catch (emailErr) {
+        console.error('Email trigger failed:', emailErr);
+      }
+
       setStep(3);
       toast.success('Reservation request submitted!');
     } catch (error) {
@@ -138,6 +185,22 @@ export default function Reservations() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Table Number</label>
+                  <select 
+                    required
+                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors"
+                    value={formData.tableNumber}
+                    onChange={(e) => setFormData({...formData, tableNumber: e.target.value})}
+                  >
+                    <option value="" disabled className="bg-[#121212]">Select a table</option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
+                      <option key={num} value={num.toString()} className="bg-[#121212]">Table {num}</option>
+                    ))}
+                  </select>
+                  <p className="text-[10px] text-zinc-500 text-left italic">Choose your preferred table number.</p>
                 </div>
 
                 <div className="space-y-2">

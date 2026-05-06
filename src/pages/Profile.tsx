@@ -5,20 +5,31 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Award, Star, TrendingUp, History, Package } from 'lucide-react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { db } from '../lib/firebase';
+import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import LoadingScreen from '../components/LoadingScreen';
 
 export default function Profile() {
   const { user, loading: authLoading } = useAuth();
   const { t } = useLanguage();
   const { showLoading, hideLoading } = useLoading();
+  const [orderCount, setOrderCount] = useState(0);
+  const [reservationCount, setReservationCount] = useState(0);
 
   useEffect(() => {
-    if (authLoading) {
-      showLoading('Accessing secure guest terminal...');
-    } else {
-      hideLoading();
-    }
-  }, [authLoading]);
+    if (!user) return;
+    
+    // Fetch live stats
+    const qOrders = query(collection(db, 'orders'), where('customerId', '==', user.uid));
+    const qReservations = query(collection(db, 'reservations'), where('customerId', '==', user.uid));
+    
+    const unsubs = [
+      onSnapshot(qOrders, (snap) => setOrderCount(snap.size)),
+      onSnapshot(qReservations, (snap) => setReservationCount(snap.size))
+    ];
+    
+    return () => unsubs.forEach(unsub => unsub());
+  }, [user]);
 
   if (authLoading) return null;
   if (!user) return <Navigate to="/login" />;
@@ -56,9 +67,9 @@ export default function Profile() {
           <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 flex items-center gap-8 shadow-2xl">
             <div className="text-right">
               <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Terminal Status</p>
-              <p className="text-xl font-mono text-green-400 flex items-center justify-end gap-2">
+              <div className="text-xl font-mono text-green-400 flex items-center justify-end gap-2">
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> ONLINE
-              </p>
+              </div>
             </div>
             <div className="h-10 w-px bg-white/10" />
             <div className="text-right">
@@ -68,7 +79,7 @@ export default function Profile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
           <AdminPortalCard 
             icon={<TrendingUp size={32} />} 
             title="Command Center" 
@@ -97,10 +108,10 @@ export default function Profile() {
              <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/20 font-bold">System Maintenance</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <MaintenanceBox label="Active Orders" value="24" />
-             <MaintenanceBox label="Table Occupancy" value="85%" />
-             <MaintenanceBox label="Staff Online" value="12" />
-             <MaintenanceBox label="Daily Revenue" value="₱52.4k" />
+             <MaintenanceBox label="Registered Orders" value={orderCount.toString()} />
+             <MaintenanceBox label="Bookings" value={reservationCount.toString()} />
+             <MaintenanceBox label="Staff Online" value="Live" />
+             <MaintenanceBox label="System Health" value="100%" />
           </div>
         </div>
       </div>
@@ -111,7 +122,7 @@ export default function Profile() {
     <div className="max-w-4xl mx-auto px-6 py-24 text-white">
       <div className="flex flex-col md:flex-row items-center gap-12 mb-20 px-2">
         <div className="relative">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-4xl font-serif italic text-white">
+          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-4xl font-serif italic text-white text-center">
             {user.displayName.charAt(0)}
           </div>
           <div className="absolute -bottom-2 -right-2 bg-gold text-black p-2 rounded-xl shadow-xl">
@@ -137,12 +148,12 @@ export default function Profile() {
           
           <div className="space-y-6">
             <div className="flex justify-between items-end">
-              <div>
+              <div className="text-left">
                 <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 mb-1">{t('currentPoints')}</p>
                 <p className="text-3xl font-mono font-bold">{user.points}</p>
               </div>
               {user.tier !== 'Gold' && (
-                <p className="text-[10px] uppercase tracking-widest font-bold opacity-60">
+                <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 text-right">
                    {nextTierPoints - user.points} points to next level
                 </p>
               )}
@@ -162,12 +173,12 @@ export default function Profile() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <StatBox icon={<History size={18}/>} label="Orders" value="12" />
-          <StatBox icon={<Package size={18}/>} label="Reserved" value="3" />
+          <StatBox icon={<History size={18}/>} label="Orders" value={orderCount.toString()} />
+          <StatBox icon={<Package size={18}/>} label="Reserved" value={reservationCount.toString()} />
           <div className="col-span-2 p-8 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between transition-colors">
              <div className="text-left">
                 <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Lifetime Savings</p>
-                <p className="text-2xl font-serif font-bold text-white">₱4,250.00</p>
+                <p className="text-2xl font-serif font-bold text-white">₱{(user.points / 10).toLocaleString()}.00</p>
              </div>
              <div className="w-12 h-12 rounded-xl bg-gold/10 text-gold flex items-center justify-center shadow-inner">
                 <Star size={24}/>

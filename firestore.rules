@@ -95,6 +95,23 @@ service cloud.firestore {
              data.read is bool;
     }
 
+    function isValidStaff(data) {
+      return data.name is string && data.name.size() > 0 &&
+             data.role is string &&
+             data.email is string &&
+             data.status in ['active', 'on-leave', 'inactive'] &&
+             data.dailyRate is number &&
+             data.standardHours is number;
+    }
+
+    function isValidShift(data) {
+      return data.staffId is string &&
+             data.date is string &&
+             data.startTime is string &&
+             data.endTime is string &&
+             (data.get('status', null) == null || data.status in ['scheduled', 'active', 'completed', 'absent']);
+    }
+
     // --- Collection Rules ---
 
     match /users/{userId} {
@@ -163,6 +180,14 @@ service cloud.firestore {
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid && 
                    incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    match /staff/{staffId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /shifts/{shiftId} {
+      allow read, write: if isAdmin();
     }
   }
 }

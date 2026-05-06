@@ -82,6 +82,12 @@ export interface Staff {
   phone: string;
   status: 'active' | 'on-leave' | 'inactive';
   joinedAt: string;
+  dailyRate: number;
+  standardHours: number;
+  overtimeRatePerHour: number;
+  lateDeductionPerHour: number;
+  absentDeduction: number;
+  allowOvertime: boolean;
 }
 
 export interface Shift {
@@ -93,6 +99,12 @@ export interface Shift {
   endTime: string;
   position: string;
   note?: string;
+  timeIn?: string;
+  timeOut?: string;
+  earnedAmount?: number;
+  overtimePay?: number;
+  deductions?: number;
+  status: 'scheduled' | 'active' | 'completed' | 'absent' | 'late';
 }
 
 export interface SiteSettings {
@@ -124,12 +136,16 @@ export interface Reservation {
   customerId: string;
   date: string;
   time: string;
-  guests: number;
-  type: 'table' | 'event';
+  guests: number | string;
+  type: string;
   notes: string;
-  status: 'pending' | 'confirmed' | 'cancelled';
+  status: 'pending' | 'confirmed' | 'booked' | 'completed' | 'cancelled';
+  tableNumber?: string;
   tableId?: string;
   eventId?: string;
+  fullName?: string;
+  phone?: string;
+  createdAt?: any;
 }
 
 export interface Reminder {

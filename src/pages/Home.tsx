@@ -21,26 +21,39 @@ export default function Home() {
   const defaultHeroImage = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000";
 
   useEffect(() => {
-    showLoading();
+    showLoading('Synchronizing Kiss Me experience...');
+    let loadedCount = 0;
+    const totalRequests = 4;
+
+    const checkLoading = () => {
+      loadedCount++;
+      if (loadedCount >= totalRequests) {
+        hideLoading();
+      }
+    };
+
     const unsubs = [
       onSnapshot(collection(db, 'settings'), (snap) => {
         if (!snap.empty) {
           setSettings({ id: snap.docs[0].id, ...snap.docs[0].data() } as SiteSettings);
         }
-      }),
+        checkLoading();
+      }, () => checkLoading()),
       onSnapshot(query(collection(db, 'moments'), orderBy('date', 'desc'), limit(4)), (snap) => {
         setFeaturedMoments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Moment)));
-      }),
+        checkLoading();
+      }, () => checkLoading()),
       onSnapshot(query(collection(db, 'events'), orderBy('date'), limit(3)), (snap) => {
         setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as AppEvent)));
-      }),
+        checkLoading();
+      }, () => checkLoading()),
       onSnapshot(query(collection(db, 'products'), limit(50)), (snap) => {
         const allProds = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
         setFeaturedProducts(allProds.filter(p => p.featured).slice(0, 4));
-      })
+        checkLoading();
+      }, () => checkLoading())
     ];
 
-    hideLoading();
     return () => unsubs.forEach(unsub => unsub());
   }, []);
 

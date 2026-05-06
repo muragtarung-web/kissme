@@ -100,11 +100,15 @@
         "date": { "type": "string", "format": "date" },
         "time": { "type": "string" },
         "guests": { "type": "number" },
-        "type": { "type": "string", "enum": ["table", "event"] },
+        "type": { "type": "string", "enum": ["table", "event", "indoor", "outdoor"] },
         "notes": { "type": "string" },
-        "status": { "type": "string", "enum": ["pending", "confirmed", "cancelled"] },
+        "status": { "type": "string", "enum": ["pending", "confirmed", "booked", "completed", "cancelled"] },
+        "tableNumber": { "type": "string" },
         "tableId": { "type": "string" },
-        "eventId": { "type": "string" }
+        "eventId": { "type": "string" },
+        "fullName": { "type": "string" },
+        "phone": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["customerId", "date", "time", "guests", "type"]
     },
@@ -149,6 +153,46 @@
         "img": { "type": "string" }
       },
       "required": ["title", "date", "time"]
+    },
+    "Staff": {
+      "title": "Staff",
+      "description": "Employee records and payroll config",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "role": { "type": "string" },
+        "email": { "type": "string" },
+        "phone": { "type": "string" },
+        "status": { "type": "string", "enum": ["active", "on-leave", "inactive"] },
+        "joinedAt": { "type": "string", "format": "date-time" },
+        "dailyRate": { "type": "number" },
+        "standardHours": { "type": "number" },
+        "overtimeRatePerHour": { "type": "number" },
+        "lateDeductionPerHour": { "type": "number" },
+        "absentDeduction": { "type": "number" }
+      },
+      "required": ["name", "role", "email", "status"]
+    },
+    "Shift": {
+      "title": "Shift",
+      "description": "Duty assignments and attendance",
+      "type": "object",
+      "properties": {
+        "staffId": { "type": "string" },
+        "staffName": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "position": { "type": "string" },
+        "note": { "type": "string" },
+        "timeIn": { "type": "string", "format": "date-time" },
+        "timeOut": { "type": "string", "format": "date-time" },
+        "earnedAmount": { "type": "number" },
+        "overtimePay": { "type": "number" },
+        "deductions": { "type": "number" },
+        "status": { "type": "string", "enum": ["scheduled", "active", "completed", "absent"] }
+      },
+      "required": ["staffId", "date", "startTime", "endTime"]
     }
   },
   "firestore": {
@@ -161,6 +205,8 @@
     "/moments": { "schema": "Moment", "description": "Guest gallery" },
     "/settings": { "schema": "SiteSettings", "description": "Global config" },
     "/reminders": { "schema": "Reminder", "description": "Admin scheduled messages" },
-    "/notifications": { "schema": "InAppNotification", "description": "User inbox" }
+    "/notifications": { "schema": "InAppNotification", "description": "User inbox" },
+    "/staff": { "schema": "Staff", "description": "Employee directory" },
+    "/shifts": { "schema": "Shift", "description": "Duty logs" }
   }
 }

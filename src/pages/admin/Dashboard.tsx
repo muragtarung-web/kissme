@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, ShoppingCart, AlertCircle, 
   BarChart3, Settings, Package, Calendar, 
   LayoutDashboard, Plus, DollarSign, Edit, Trash2, X, Search,
-  Camera, Globe, Heart, Bell, ArrowRight, Eye
+  Camera, Globe, Heart, Bell, ArrowRight, Eye, Grid
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Order, Product, Category, Event as AppEvent, Moment, SiteSettings, Reminder, Reservation, Staff, Shift } from '../../types';
@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 import { handleFirestoreError, OperationType } from '../../lib/firestore-errors';
 import { useLoading } from '../../hooks/useLoading';
 
-type AdminView = 'overview' | 'menu' | 'events' | 'orders' | 'pos' | 'moments' | 'site' | 'reminders' | 'financials' | 'staff' | 'reservations';
+type AdminView = 'overview' | 'menu' | 'events' | 'orders' | 'pos' | 'moments' | 'site' | 'reminders' | 'financials' | 'staff' | 'reservations' | 'table-map' | 'audit';
 
 export default function AdminDashboard() {
   const { showLoading, hideLoading } = useLoading();
@@ -176,10 +176,63 @@ export default function AdminDashboard() {
   const deleteReminder = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
+      showLoading('Deleting reminder...');
       await deleteDoc(doc(db, 'reminders', id));
       toast.success('Reminder deleted');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const updateReservationStatus = async (id: string, status: string) => {
+    try {
+      showLoading(`Updating reservation to ${status}...`);
+      
+      // Find the reservation details for the email
+      const reservation = reservations.find(r => r.id === id);
+      
+      await updateDoc(doc(db, 'reservations', id), { status });
+      toast.success(`Reservation ${status}`, { position: 'bottom-right' });
+
+      // Trigger email notification
+      if (reservation && reservation.email) {
+        try {
+          await fetch('/api/send-reservation-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: reservation.email,
+              fullName: reservation.fullName || 'Valued Guest',
+              date: reservation.date,
+              time: reservation.time,
+              tableNumber: reservation.tableNumber,
+              guests: reservation.guests,
+              status: status
+            })
+          });
+        } catch (emailErr) {
+          console.error('Failed to trigger status update email:', emailErr);
+        }
+      }
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `reservations/${id}`);
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const deleteReservation = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this reservation?')) return;
+    try {
+      showLoading('Deleting reservation record...');
+      await deleteDoc(doc(db, 'reservations', id));
+      toast.success('Reservation deleted');
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, `reservations/${id}`);
+    } finally {
+      hideLoading();
     }
   };
 
@@ -300,10 +353,13 @@ export default function AdminDashboard() {
   const deleteProduct = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
+      showLoading('Removing item from inventory...');
       await deleteDoc(doc(db, 'products', id));
       toast.success('Entity removed');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
     }
   };
 
@@ -442,6 +498,7 @@ export default function AdminDashboard() {
 
   const updateOrderStatus = async (id: string, status: string) => {
     try {
+      showLoading(`Updating order ${id} status...`);
       await updateDoc(doc(db, 'orders', id), { 
         status,
         statusHistory: arrayUnion({
@@ -453,11 +510,14 @@ export default function AdminDashboard() {
       toast.success(`Order set to ${status}`, { position: 'bottom-right' });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `orders/${id}`);
+    } finally {
+      hideLoading();
     }
   };
 
   const handleSaveEvent = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    showLoading('Scheduling event in terminal...');
     const formData = new FormData(e.currentTarget);
     const eventData = {
       title: formData.get('title') as string,
@@ -479,21 +539,27 @@ export default function AdminDashboard() {
       setEditingEvent(null);
     } catch (error) {
       handleFirestoreError(error, editingEvent ? OperationType.UPDATE : OperationType.CREATE, 'events');
+    } finally {
+      hideLoading();
     }
   };
 
   const deleteEvent = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
+      showLoading('Deleting happening record...');
       await deleteDoc(doc(db, 'events', id));
       toast.success('Happening removed');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
     }
   };
 
   const handleSaveMoment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    showLoading('Capturing moment in data stream...');
     const formData = new FormData(e.currentTarget);
     const momentData = {
       title: formData.get('title') as string,
@@ -515,21 +581,27 @@ export default function AdminDashboard() {
       setEditingMoment(null);
     } catch (error) {
       handleFirestoreError(error, editingMoment ? OperationType.UPDATE : OperationType.CREATE, 'moments');
+    } finally {
+      hideLoading();
     }
   };
 
   const deleteMoment = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
+      showLoading('Removing moment from memory...');
       await deleteDoc(doc(db, 'moments', id));
       toast.success('Moment removed');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
     }
   };
 
   const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    showLoading('Updating store identity...');
     const formData = new FormData(e.currentTarget);
     const settingsData = {
       heroTitle: formData.get('heroTitle') as string,
@@ -552,6 +624,8 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       handleFirestoreError(error, siteSettings ? OperationType.UPDATE : OperationType.CREATE, 'settings');
+    } finally {
+      hideLoading();
     }
   };
 
@@ -566,6 +640,12 @@ export default function AdminDashboard() {
       phone: formData.get('phone') as string,
       status: formData.get('status') as any,
       joinedAt: formData.get('joinedAt') as string || new Date().toISOString(),
+      dailyRate: Number(formData.get('dailyRate')) || 0,
+      standardHours: Number(formData.get('standardHours')) || 8,
+      overtimeRatePerHour: Number(formData.get('overtimeRatePerHour')) || 0,
+      lateDeductionPerHour: Number(formData.get('lateDeductionPerHour')) || 0,
+      absentDeduction: Number(formData.get('absentDeduction')) || 0,
+      allowOvertime: formData.get('allowOvertime') === 'on',
     };
 
     try {
@@ -588,10 +668,13 @@ export default function AdminDashboard() {
   const deleteStaff = async (id: string) => {
     if (!confirm('Are you sure? Removing staff will not delete their shifts.')) return;
     try {
+      showLoading('Updating staff registry...');
       await deleteDoc(doc(db, 'staff', id));
       toast.success('Staff record removed');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
     }
   };
 
@@ -610,6 +693,7 @@ export default function AdminDashboard() {
       endTime: formData.get('endTime') as string,
       position: formData.get('position') as string,
       note: formData.get('note') as string,
+      status: formData.get('id') ? undefined : 'scheduled', // Only set on new
     };
 
     try {
@@ -629,20 +713,209 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleTimeIn = async (shift: Shift) => {
+    try {
+      showLoading('Clocking In...');
+      const now = new Date();
+      const scheduledStart = new Date(`${shift.date}T${shift.startTime}`);
+      
+      // Calculate delay in minutes
+      const delayMs = now.getTime() - scheduledStart.getTime();
+      const delayMins = delayMs / (1000 * 60);
+
+      // Early window check (e.g., 15 mins before)
+      if (delayMins < -15) {
+        toast.error('Too early for clock-in. Please wait within 15 minutes of your shift.');
+        return;
+      }
+
+      // If more than 30 mins late, strict rule applies
+      if (delayMins > 30) {
+        toast.error('Clock-in closed. You are more than 30 minutes late.');
+        await updateDoc(doc(db, 'shifts', shift.id), {
+          status: 'late',
+          note: (shift.note || '') + ` [Strict Rule: Clock-in attempted at ${now.toLocaleTimeString()} - 30min window exceeded]`
+        });
+        return;
+      }
+
+      await updateDoc(doc(db, 'shifts', shift.id), {
+        timeIn: now.toISOString(),
+        status: 'active'
+      });
+      toast.success(`${shift.staffName} Clocked In`);
+    } catch (error) {
+      toast.error('Clock in failed');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const handleTimeOut = async (shift: Shift) => {
+    try {
+      const now = new Date();
+      const scheduledEnd = new Date(`${shift.date}T${shift.endTime}`);
+
+      // Strict rule: No early clock out
+      if (now < scheduledEnd) {
+        const diffMs = scheduledEnd.getTime() - now.getTime();
+        const diffMins = Math.ceil(diffMs / (1000 * 60));
+        toast.error(`Clock-out locked. Please wait ${diffMins} more minutes until the end of duty (${shift.endTime}).`);
+        return;
+      }
+
+      showLoading('Clocking Out & Calculating Pay...');
+      const staffMember = staff.find(s => s.id === shift.staffId);
+      if (!staffMember) throw new Error('Staff member not found');
+
+      const timeIn = new Date(shift.timeIn!);
+      const workedMs = now.getTime() - timeIn.getTime();
+      const workedHours = workedMs / (1000 * 60 * 60);
+
+      // Lateness calc
+      const scheduledStart = new Date(`${shift.date}T${shift.startTime}`);
+      const isLate = timeIn > scheduledStart;
+      let deductions = 0;
+      
+      if (isLate) {
+        const lateMs = timeIn.getTime() - scheduledStart.getTime();
+        const lateMins = Math.floor(lateMs / (1000 * 60));
+        // Calculate hourly deduction equivalent
+        deductions = Math.round((lateMins / 60) * (staffMember.lateDeductionPerHour || 0));
+        if (deductions > 0) {
+          toast.success(`Late deduction applied: ₱${deductions} (${lateMins} minutes late)`);
+        }
+      }
+
+      const standardHours = staffMember.standardHours || 8;
+      const overtimeHours = Math.max(0, workedHours - standardHours);
+      
+      // Only pay OT if allowed by admin
+      const overtimePay = staffMember.allowOvertime 
+        ? Math.round(overtimeHours * (staffMember.overtimeRatePerHour || 0))
+        : 0;
+      
+      const basicEarned = staffMember.dailyRate || 0;
+      const finalEarned = basicEarned + overtimePay - deductions;
+
+      await updateDoc(doc(db, 'shifts', shift.id), {
+        timeOut: now.toISOString(),
+        earnedAmount: finalEarned,
+        overtimePay: overtimePay,
+        deductions: deductions,
+        status: 'completed'
+      });
+
+      toast.success(`${shift.staffName} duty completed. Total Pay: ₱${finalEarned}`);
+    } catch (error) {
+      toast.error('Clock out failed');
+      console.error(error);
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const markAbsent = async (shift: Shift) => {
+    if (!confirm(`Mark ${shift.staffName} as absent?`)) return;
+    try {
+      showLoading('Marking Absence...');
+      const staffMember = staff.find(s => s.id === shift.staffId);
+      const deductions = staffMember?.absentDeduction || 0;
+      
+      await updateDoc(doc(db, 'shifts', shift.id), {
+        status: 'absent',
+        deductions: deductions,
+        earnedAmount: -deductions
+      });
+      toast.success('Absence recorded');
+    } catch (error) {
+      toast.error('Failed to mark absent');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const [showPaySlipModal, setShowPaySlipModal] = useState(false);
+  const [selectedShiftForSlip, setSelectedShiftForSlip] = useState<Shift | null>(null);
+
+  const handlePrintPaySlip = (shift: Shift) => {
+    setSelectedShiftForSlip(shift);
+    setShowPaySlipModal(true);
+  };
+
   const deleteShift = async (id: string) => {
     if (!confirm('Are you sure?')) return;
     try {
+      showLoading('Archiving shift data...');
       await deleteDoc(doc(db, 'shifts', id));
       toast.success('Shift record removed');
     } catch (error) {
       toast.error('Deletion failed');
+    } finally {
+      hideLoading();
     }
   };
 
+  const calculateMonthlySales = (year: number, month: number) => {
+    return orders
+      .filter(order => {
+        const d = order.createdAt?.toDate ? order.createdAt.toDate() : new Date(order.createdAt);
+        return d.getFullYear() === year && d.getMonth() === month && (order.status === 'completed' || order.paymentStatus === 'paid');
+      })
+      .reduce((sum, order) => sum + (order.total || 0), 0);
+  };
+
+  const calculateMonthlyPayroll = (year: number, month: number) => {
+    return shifts
+      .filter(shift => {
+        const d = new Date(shift.date);
+        return d.getFullYear() === year && d.getMonth() === month && shift.status === 'completed';
+      })
+      .reduce((sum, shift) => sum + (shift.earnedAmount || 0), 0);
+  };
+
+  const getAuditData = () => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+    
+    const months = [];
+    for (let i = 0; i < 12; i++) {
+      const d = new Date(currentYear, currentMonth - i, 1);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const sales = calculateMonthlySales(year, month);
+      const payroll = calculateMonthlyPayroll(year, month);
+      months.push({
+        label: d.toLocaleString('default', { month: 'long', year: 'numeric' }),
+        sales,
+        payroll,
+        profit: sales - payroll,
+        year,
+        month
+      });
+    }
+    return months;
+  };
+
+  const [selectedAuditMonth, setSelectedAuditMonth] = useState<any>(null);
+  const [showAuditDetail, setShowAuditDetail] = useState(false);
+  const [showPayrollSummary, setShowPayrollSummary] = useState(false);
+
+  const handleOpenAuditDetail = (monthData: any) => {
+    setSelectedAuditMonth(monthData);
+    setShowAuditDetail(true);
+  };
+
+  const handleOpenPayrollSummary = (monthData: any) => {
+    setSelectedAuditMonth(monthData);
+    setShowPayrollSummary(true);
+  };
+
   return (
-    <div className="flex bg-[#0A0A0A] min-h-screen text-[#F5F5F5] font-sans selection:bg-gold/30">
+    <div className="flex bg-[#0A0A0A] h-screen text-[#F5F5F5] font-sans selection:bg-gold/30 overflow-hidden">
       {/* Admin Sidebar */}
-      <aside className="w-72 h-screen sticky top-0 bg-[#0D0D0D] border-r border-white/5 flex flex-col z-10 shadow-2xl overflow-hidden">
+      <aside className="w-72 h-full bg-[#0D0D0D] border-r border-white/5 flex flex-col z-10 shadow-2xl overflow-hidden flex-shrink-0">
         <div className="p-8 border-b border-white/5 shrink-0">
           <h1 className="text-gold font-serif text-2xl tracking-tight leading-none uppercase">Kiss me Store</h1>
           <p className="text-[10px] uppercase tracking-widest text-white/40 mt-2 font-bold">Terminal Control</p>
@@ -710,10 +983,22 @@ export default function AdminDashboard() {
             onClick={() => setView('reservations')}
           />
           <AdminNavItem 
+            icon={<Grid size={14} />} 
+            label="Table Map" 
+            active={view === 'table-map'} 
+            onClick={() => setView('table-map')}
+          />
+          <AdminNavItem 
             icon={<Users size={14} />} 
             label="Staff & Shifts" 
             active={view === 'staff'}
             onClick={() => setView('staff')}
+          />
+          <AdminNavItem 
+            icon={<BarChart3 size={14} />} 
+            label="Financial Audit" 
+            active={view === 'audit'} 
+            onClick={() => setView('audit')} 
           />
         </nav>
 
@@ -890,28 +1175,116 @@ export default function AdminDashboard() {
                   <h3 className="text-[10px] uppercase tracking-widest text-white/20 font-bold border-b border-white/5 pb-2">Duty Assignments</h3>
                   <div className="space-y-4">
                     {shifts.map(shift => (
-                      <div key={shift.id} className="bg-[#121212] border border-white/5 p-6 rounded-2xl flex flex-wrap justify-between items-center gap-6">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 rounded-xl bg-gold/10 border border-gold/20 flex items-center justify-center text-gold">
-                            <Calendar size={20} />
+                      <div key={shift.id} className="bg-[#121212] border border-white/5 p-6 rounded-2xl flex flex-col shadow-2xl">
+                        <div className="flex flex-wrap justify-between items-start gap-6">
+                          <div className="flex items-center gap-4">
+                            <div className={`w-12 h-12 rounded-xl border flex items-center justify-center ${
+                              shift.status === 'completed' ? 'bg-green-500/10 border-green-500/20 text-green-500' :
+                              shift.status === 'active' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500' :
+                              shift.status === 'absent' ? 'bg-red-500/10 border-red-500/20 text-red-500' :
+                              shift.status === 'late' ? 'bg-orange-500/10 border-orange-500/20 text-orange-500' :
+                              'bg-gold/10 border-gold/20 text-gold'
+                            }`}>
+                              <Calendar size={20} />
+                            </div>
+                            <div className="text-left">
+                              <p className="text-sm font-bold text-white">{shift.staffName}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <p className="text-[9px] uppercase tracking-widest text-gold font-bold px-1.5 py-0.5 bg-gold/10 rounded">{shift.position}</p>
+                                <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">{new Date(shift.date).toLocaleDateString()}</p>
+                                <span className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full ${
+                                  shift.status === 'completed' ? 'bg-green-500/20 text-green-500' :
+                                  shift.status === 'active' ? 'bg-blue-500/20 text-blue-500 animate-pulse' :
+                                  shift.status === 'absent' ? 'bg-red-500/20 text-red-500' :
+                                  shift.status === 'late' ? 'bg-orange-500/20 text-orange-500' :
+                                  'bg-white/5 text-white/40'
+                                }`}>
+                                  {shift.status}
+                                </span>
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-white">{shift.staffName}</p>
-                            <div className="flex items-center gap-2 mt-1">
-                              <p className="text-[9px] uppercase tracking-widest text-gold font-bold px-1.5 py-0.5 bg-gold/10 rounded">{shift.position}</p>
-                              <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">{new Date(shift.date).toLocaleDateString()}</p>
+                          
+                          <div className="flex items-center gap-8">
+                            <div className="text-right">
+                              <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Scheduled Hours</p>
+                              <p className="text-xs font-serif italic text-white">{shift.startTime} — {shift.endTime}</p>
+                            </div>
+                            {shift.earnedAmount !== undefined && (
+                              <div className="text-right">
+                                <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-1">Earned Amount</p>
+                                <p className="text-lg font-serif italic text-green-500">₱{shift.earnedAmount}</p>
+                              </div>
+                            )}
+                            <div className="flex gap-2">
+                              {shift.status === 'completed' && (
+                                <button onClick={() => handlePrintPaySlip(shift)} className="px-3 py-1 bg-white/5 hover:bg-gold hover:text-black rounded text-[8px] font-bold uppercase tracking-widest text-white transition-all border border-white/10">Pay Slip</button>
+                              )}
+                              <button onClick={() => { setEditingShift(shift); setShowShiftModal(true); }} className="p-2 bg-white/5 hover:bg-gold hover:text-black rounded-lg transition-all text-white"><Edit size={14}/></button>
+                              <button onClick={() => deleteShift(shift.id)} className="p-2 bg-white/5 hover:bg-red-500 rounded-lg transition-all text-white"><Trash2 size={14}/></button>
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center gap-8">
-                          <div className="text-right">
-                            <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-1">Shift Hours</p>
-                            <p className="text-xs font-serif italic text-white">{shift.startTime} — {shift.endTime}</p>
+
+                        {/* Clocking Controls */}
+                        <div className="mt-6 pt-6 border-t border-white/5 flex flex-wrap gap-4 items-center justify-between">
+                          <div className="flex gap-4">
+                            {!shift.timeIn && shift.status === 'scheduled' && (
+                              <>
+                                <button 
+                                  onClick={() => handleTimeIn(shift)}
+                                  className="px-4 py-2 bg-blue-500 text-black text-[10px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all shadow-lg"
+                                >
+                                  Time In
+                                </button>
+                                <button 
+                                  onClick={() => markAbsent(shift)}
+                                  className="px-4 py-2 border border-red-500 text-red-500 text-[10px] font-bold uppercase tracking-widest rounded hover:bg-red-500 hover:text-white transition-all"
+                                >
+                                  Mark Absent
+                                </button>
+                              </>
+                            )}
+                            {shift.timeIn && !shift.timeOut && shift.status === 'active' && (
+                              <>
+                                <button 
+                                  onClick={() => handleTimeOut(shift)}
+                                  className="px-4 py-2 bg-green-500 text-black text-[10px] font-bold uppercase tracking-widest rounded hover:bg-white transition-all shadow-lg"
+                                >
+                                  Time Out
+                                </button>
+                                <div className="text-[10px] text-white/40 italic flex items-center bg-white/5 px-3 rounded text-left">
+                                  Locks until {shift.endTime}
+                                </div>
+                              </>
+                            )}
                           </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => { setEditingShift(shift); setShowShiftModal(true); }} className="p-2 bg-white/5 hover:bg-gold hover:text-black rounded-lg transition-all text-white"><Edit size={14}/></button>
-                            <button onClick={() => deleteShift(shift.id)} className="p-2 bg-white/5 hover:bg-red-500 rounded-lg transition-all text-white"><Trash2 size={14}/></button>
+
+                          <div className="flex gap-6">
+                            {shift.timeIn && (
+                              <div className="text-left">
+                                <p className="text-[8px] uppercase tracking-widest text-white/20 font-bold">Clock In</p>
+                                <p className="text-[10px] text-white/60 font-bold">{new Date(shift.timeIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              </div>
+                            )}
+                            {shift.timeOut && (
+                              <div className="text-left">
+                                <p className="text-[8px] uppercase tracking-widest text-white/20 font-bold">Clock Out</p>
+                                <p className="text-[10px] text-white/60 font-bold">{new Date(shift.timeOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              </div>
+                            )}
+                            {shift.overtimePay !== undefined && shift.overtimePay > 0 && (
+                              <div className="text-left">
+                                <p className="text-[8px] uppercase tracking-widest text-blue-500 font-bold">Overtime</p>
+                                <p className="text-[10px] text-blue-400 font-bold">+₱{shift.overtimePay}</p>
+                              </div>
+                            )}
+                            {shift.deductions !== undefined && shift.deductions > 0 && (
+                              <div className="text-left">
+                                <p className="text-[8px] uppercase tracking-widest text-red-500 font-bold">Deductions</p>
+                                <p className="text-[10px] text-red-400 font-bold">-₱{shift.deductions}</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -923,6 +1296,116 @@ export default function AdminDashboard() {
                       </div>
                     )}
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {view === 'audit' && (
+            <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4">
+              <header className="flex justify-between items-end">
+                <div>
+                  <h1 className="text-4xl font-serif italic mb-2 text-gold">Financial <span className="text-white/20">Audit Intelligence</span></h1>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Operational transparency and monthly reconciliation</p>
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => window.print()}
+                    className="btn-secondary py-2 px-6 flex items-center gap-2 text-[10px] font-bold tracking-widest uppercase"
+                  >
+                    <Plus size={14} /> Export Global Audit
+                  </button>
+                </div>
+              </header>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                {getAuditData().slice(0, 3).map((m, i) => (
+                  <motion.div 
+                    key={m.label}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="bg-[#121212] border border-white/5 p-8 rounded-2xl relative overflow-hidden group shadow-2xl"
+                  >
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <TrendingUp size={80} className="text-gold" />
+                    </div>
+                    <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-4">{m.label}</p>
+                    <div className="space-y-6 relative z-10">
+                      <div>
+                        <p className="text-[9px] uppercase tracking-widest text-gold/60 font-bold mb-1">Gross Revenue</p>
+                        <p className="text-3xl font-serif italic text-white">₱{m.sales.toLocaleString()}</p>
+                      </div>
+                      <div className="flex justify-between items-end border-t border-white/5 pt-4">
+                        <div className="text-left">
+                          <p className="text-[9px] uppercase tracking-widest text-white/20 font-bold mb-1">Payroll Exp.</p>
+                          <p className="text-lg font-serif italic text-red-500/80">₱{m.payroll.toLocaleString()}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[9px] uppercase tracking-widest text-white/20 font-bold mb-1">Net Gain</p>
+                          <p className={`text-xl font-serif italic ${m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                            ₱{m.profit.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleOpenAuditDetail(m)}
+                        className="w-full mt-4 py-3 bg-white/5 hover:bg-gold hover:text-black text-[9px] font-bold uppercase tracking-widest text-white/60 rounded transition-all border border-white/5"
+                      >
+                        Generate Audit Slip
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              <div className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+                <div className="px-8 py-6 border-b border-white/5 bg-white/5 flex justify-between items-center">
+                  <h3 className="text-[10px] uppercase tracking-[0.2em] text-white font-bold">Audit History Registry</h3>
+                  <p className="text-[9px] text-white/40 italic uppercase tracking-widest font-bold">Past 12 Months Intelligence</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/5">
+                        <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-white/20 font-bold">Month</th>
+                        <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-white/20 font-bold text-right">Revenue</th>
+                        <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-white/20 font-bold text-right">Costs</th>
+                        <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-white/20 font-bold text-right">Net Profit</th>
+                        <th className="px-8 py-4 text-[10px] uppercase tracking-widest text-white/20 font-bold text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {getAuditData().map(m => (
+                        <tr key={m.label} className="hover:bg-white/[0.02] transition-colors group">
+                          <td className="px-8 py-6">
+                            <p className="text-sm font-bold text-white group-hover:text-gold transition-colors">{m.label}</p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <p className="text-sm font-serif italic text-white/80">₱{m.sales.toLocaleString()}</p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <p className="text-sm font-serif italic text-red-500/60">₱{m.payroll.toLocaleString()}</p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <p className={`text-sm font-serif italic font-bold ${m.profit >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                              ₱{m.profit.toLocaleString()}
+                            </p>
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => handleOpenPayrollSummary(m)} className="p-2 bg-blue-500/10 hover:bg-blue-500 hover:text-white rounded transition-all text-blue-500" title="Payroll Summary">
+                                <Users size={16} />
+                              </button>
+                              <button onClick={() => handleOpenAuditDetail(m)} className="p-2 bg-white/5 hover:bg-gold hover:text-black rounded transition-all text-white/40 hover:text-black" title="Audit Detail">
+                                <BarChart3 size={16} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
@@ -969,10 +1452,55 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Real-time incoming list */}
-                <div className="col-span-4 flex flex-col gap-4 text-left">
-                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 text-white/40">Incoming Feed</h3>
+                <div className="col-span-4 flex flex-col gap-6 text-left">
+                  {/* Attendance Intelligence */}
+                  <div className="bg-black/40 border border-white/5 rounded-xl p-6 space-y-6">
+                    <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 border-b border-white/5 pb-4">Attendance Feed</h3>
+                    <div className="space-y-4">
+                      {shifts.filter(s => s.status === 'active').length > 0 ? (
+                        shifts.filter(s => s.status === 'active').map(s => (
+                          <div key={s.id} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/10">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-500 font-bold text-[10px]">
+                                {s.staffName[0]}
+                              </div>
+                              <div>
+                                <p className="text-[11px] font-bold text-white">{s.staffName}</p>
+                                <p className="text-[8px] text-white/40 uppercase tracking-widest">{s.position}</p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[8px] text-green-500 font-bold uppercase tracking-widest flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> Clocked In
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-[9px] text-white/20 italic font-bold uppercase tracking-widest py-4 text-center">No terminal sessions active</p>
+                      )}
+                    </div>
+
+                    {shifts.filter(s => s.status === 'late').length > 0 && (
+                      <div className="pt-4 border-t border-white/5">
+                        <p className="text-[10px] text-red-500 font-bold uppercase tracking-widest mb-3 flex items-center gap-2">
+                          <AlertCircle size={12} /> Late Alerts
+                        </p>
+                        <div className="space-y-2">
+                          {shifts.filter(s => s.status === 'late').slice(0, 2).map(s => (
+                            <div key={s.id} className="p-3 bg-red-500/5 rounded border border-red-500/10">
+                              <p className="text-[10px] font-bold text-red-400">{s.staffName}</p>
+                              <p className="text-[8px] text-red-500/40 uppercase tracking-widest mt-1">Shift: {s.startTime} - Window Blocked</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] px-2 text-white/40 mt-4">Order Stream</h3>
                   <div className="bg-black/40 border border-white/5 rounded-xl p-4 space-y-4">
-                    {orders.map(order => (
+                    {orders.slice(0, 5).map(order => (
                       <div key={order.id} className="p-4 bg-white/[0.03] border border-white/10 rounded items-start flex justify-between">
                         <div>
                           <p className="text-[10px] font-bold uppercase tracking-tight text-gold">#{order.id.slice(-6)} • {order.type || 'Standard'}</p>
@@ -1652,11 +2180,12 @@ export default function AdminDashboard() {
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-white/5 border-b border-white/10">
-                            <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Guest ID</th>
+                            <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Guest / Table</th>
                             <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Event/Session</th>
                             <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Date & Time</th>
                             <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Guests</th>
                             <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold">Status</th>
+                            <th className="px-6 py-4 text-[10px] uppercase tracking-widest text-white/40 font-bold text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-white/5">
@@ -1665,10 +2194,15 @@ export default function AdminDashboard() {
                             return (
                               <tr key={res.id} className="hover:bg-white/[0.02] transition-colors">
                                 <td className="px-6 py-4">
-                                  <p className="text-xs font-bold text-white uppercase tracking-tight">{res.customerId}</p>
+                                  <div className="flex flex-col">
+                                    <p className="text-xs font-bold text-white uppercase tracking-tight">{res.fullName || 'Anonymous'}</p>
+                                    <p className="text-[10px] text-gold font-bold">
+                                      {res.tableNumber ? `Table ${res.tableNumber}` : 'No Table Set'}
+                                    </p>
+                                  </div>
                                 </td>
                                 <td className="px-6 py-4">
-                                  <p className="text-xs text-gold font-serif italic">{event?.title || (res.type === 'table' ? 'Table Booking' : 'Unknown Terminal')}</p>
+                                  <p className="text-xs text-gold font-serif italic">{event?.title || (res.type === 'table' || res.type === 'indoor' || res.type === 'outdoor' ? 'Table Booking' : 'Unknown Terminal')}</p>
                                 </td>
                                 <td className="px-6 py-4">
                                   <p className="text-[10px] text-white/60 font-bold uppercase tracking-widest">{res.date} • {res.time}</p>
@@ -1679,11 +2213,55 @@ export default function AdminDashboard() {
                                 <td className="px-6 py-4">
                                   <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-widest ${
                                     res.status === 'confirmed' ? 'bg-green-500/10 text-green-500' : 
+                                    res.status === 'booked' ? 'bg-blue-500/10 text-blue-500' :
+                                    res.status === 'completed' ? 'bg-zinc-500/10 text-zinc-500' :
                                     res.status === 'pending' ? 'bg-gold/10 text-gold' : 
                                     'bg-red-500/10 text-red-500'
                                   }`}>
                                     {res.status}
                                   </span>
+                                </td>
+                                <td className="px-6 py-4 text-right">
+                                  <div className="flex justify-end gap-2">
+                                    {res.status === 'pending' && (
+                                      <button 
+                                        onClick={() => updateReservationStatus(res.id, 'confirmed')}
+                                        className="p-1 px-2 bg-green-500/20 text-green-500 rounded text-[9px] font-bold hover:bg-green-500 hover:text-black transition-all"
+                                      >
+                                        CONFIRM
+                                      </button>
+                                    )}
+                                    {(res.status === 'confirmed' || res.status === 'pending') && (
+                                      <button 
+                                        onClick={() => updateReservationStatus(res.id, 'booked')}
+                                        className="p-1 px-2 bg-blue-500/20 text-blue-500 rounded text-[9px] font-bold hover:bg-blue-500 hover:text-black transition-all"
+                                      >
+                                        BOOKED
+                                      </button>
+                                    )}
+                                    {res.status === 'booked' && (
+                                      <button 
+                                        onClick={() => updateReservationStatus(res.id, 'completed')}
+                                        className="p-1 px-2 bg-zinc-500/20 text-zinc-500 rounded text-[9px] font-bold hover:bg-zinc-500 hover:text-white transition-all"
+                                      >
+                                        COMPLETED
+                                      </button>
+                                    )}
+                                    {res.status !== 'cancelled' && res.status !== 'completed' && (
+                                      <button 
+                                        onClick={() => updateReservationStatus(res.id, 'cancelled')}
+                                        className="p-1 px-2 bg-red-500/20 text-red-500 rounded text-[9px] font-bold hover:bg-red-500 hover:text-black transition-all"
+                                      >
+                                        CANCEL
+                                      </button>
+                                    )}
+                                    <button 
+                                      onClick={() => deleteReservation(res.id)}
+                                      className="p-1 text-white/20 hover:text-red-500 transition-colors"
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
                                 </td>
                               </tr>
                             );
@@ -1699,6 +2277,83 @@ export default function AdminDashboard() {
                       </table>
                    </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {view === 'table-map' && (
+            <div className="space-y-10">
+              <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <h1 className="text-4xl font-serif italic mb-2 text-white">Table <span className="text-white/20">Cartography</span></h1>
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Real-time spatial monitoring of lounge capacity and booking density</p>
+                </div>
+                <div className="flex gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-[10px] uppercase font-bold text-white/60">Booked</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-gold"></div>
+                    <span className="text-[10px] uppercase font-bold text-white/60">Pending</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-white/10"></div>
+                    <span className="text-[10px] uppercase font-bold text-white/60">Available</span>
+                  </div>
+                </div>
+              </header>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
+                  const today = new Date().toISOString().split('T')[0];
+                  const reservation = reservations.find(r => 
+                    r.tableNumber === num.toString() && 
+                    r.date === today &&
+                    ['pending', 'confirmed', 'booked'].includes(r.status)
+                  );
+
+                  let statusColor = 'bg-white/5 border-white/10 opacity-40';
+                  let statusText = 'Available';
+                  let ringColor = 'ring-white/5';
+
+                  if (reservation) {
+                    if (reservation.status === 'booked') {
+                      statusColor = 'bg-blue-500/10 border-blue-500/20';
+                      statusText = 'Occupied';
+                      ringColor = 'ring-blue-500/20';
+                    } else if (reservation.status === 'confirmed' || reservation.status === 'pending') {
+                      statusColor = 'bg-gold/10 border-gold/20';
+                      statusText = reservation.status === 'confirmed' ? 'Confirmed' : 'Pending';
+                      ringColor = 'ring-gold/20';
+                    }
+                  }
+
+                  return (
+                    <motion.div 
+                      key={num}
+                      whileHover={{ scale: 1.05 }}
+                      className={`relative aspect-square rounded-3xl border-2 flex flex-col items-center justify-center gap-1 transition-all ring-8 ${ringColor} ${statusColor}`}
+                    >
+                      <div className="text-3xl font-serif italic text-white">{num}</div>
+                      <div className="text-[10px] uppercase tracking-widest font-bold text-white/40">{statusText}</div>
+                      {reservation && (
+                        <div className="absolute -bottom-2 bg-[#121212] px-3 py-1 rounded-full border border-white/10 shadow-xl overflow-hidden max-w-[90%]">
+                          <p className="text-[8px] font-bold text-gold truncate uppercase tracking-tighter">{reservation.fullName}</p>
+                        </div>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              <div className="bg-[#121212] border border-white/5 p-8 rounded-3xl">
+                <h3 className="text-xs font-bold text-gold uppercase tracking-[0.2em] mb-4">Space Optimization Logic</h3>
+                <p className="text-xs text-white/40 leading-relaxed max-w-2xl">
+                  Table mapping is currently synchronized with today's date (<span className="text-white">{new Date().toLocaleDateString()}</span>). 
+                  Automated conflict detection prevents double-booking at the source. Tables in status "Occupied" are currently 
+                  under active digital session or have been confirmed via the terminal.
+                </p>
               </div>
             </div>
           )}
@@ -2102,21 +2757,29 @@ export default function AdminDashboard() {
       {/* Staff Modal */}
       {showStaffModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/60">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#0A0A0A] border border-white/10 p-10 rounded-3xl shadow-3xl w-full max-w-lg">
-            <h2 className="text-2xl font-serif italic text-white mb-8 text-left">{editingStaff ? 'Update Member' : 'Enlist Member'}</h2>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="bg-[#121212] border border-white/10 p-10 rounded-2xl shadow-3xl w-full max-w-xl overflow-y-auto max-h-[90vh]"
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-serif italic text-white uppercase tracking-tight">{editingStaff ? 'Update Member' : 'Enlist Member'}</h2>
+              <button onClick={() => setShowStaffModal(false)} className="p-2 hover:bg-white/5 rounded-full text-white transition-colors"><X size={24}/></button>
+            </div>
+            
             <form onSubmit={handleSaveStaff} className="space-y-6">
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Full Name</label>
-                <input name="name" defaultValue={editingStaff?.name} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input name="name" defaultValue={editingStaff?.name} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Primary Role</label>
-                  <input name="role" defaultValue={editingStaff?.role} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  <input name="role" defaultValue={editingStaff?.role} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
                 </div>
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Status</label>
-                  <select name="status" defaultValue={editingStaff?.status || 'active'} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white">
+                  <select name="status" defaultValue={editingStaff?.status || 'active'} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors">
                     <option value="active" className="bg-[#121212]">Active</option>
                     <option value="on-leave" className="bg-[#121212]">On Leave</option>
                     <option value="inactive" className="bg-[#121212]">Inactive</option>
@@ -2125,15 +2788,47 @@ export default function AdminDashboard() {
               </div>
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Email Interface</label>
-                <input name="email" type="email" defaultValue={editingStaff?.email} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input name="email" type="email" defaultValue={editingStaff?.email} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
               </div>
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Direct Line</label>
-                <input name="phone" defaultValue={editingStaff?.phone} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input name="phone" defaultValue={editingStaff?.phone} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
+              </div>
+
+              <div className="bg-white/5 p-6 rounded-xl space-y-6">
+                <h3 className="text-[10px] uppercase tracking-widest text-gold font-bold border-b border-white/5 pb-2">Payroll Configuration</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Daily Rate (₱)</label>
+                    <input name="dailyRate" type="number" defaultValue={editingStaff?.dailyRate} required placeholder="500" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Standard Duty (Hrs)</label>
+                    <input name="standardHours" type="number" defaultValue={editingStaff?.standardHours || 8} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Overtime Rate/Hr (₱)</label>
+                    <input name="overtimeRatePerHour" type="number" defaultValue={editingStaff?.overtimeRatePerHour} placeholder="75" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  </div>
+                  <div className="space-y-1 text-left">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Late Deduction/Hr (₱)</label>
+                    <input name="lateDeductionPerHour" type="number" defaultValue={editingStaff?.lateDeductionPerHour} placeholder="50" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  </div>
+                  <div className="col-span-2 space-y-1 text-left">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Absent Deduction/Day (₱)</label>
+                    <input name="absentDeduction" type="number" defaultValue={editingStaff?.absentDeduction} placeholder="500" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  </div>
+                  <div className="col-span-2 flex items-center gap-3 bg-white/5 p-4 rounded-lg mt-2">
+                    <input type="checkbox" name="allowOvertime" defaultChecked={editingStaff?.allowOvertime} id="allowOvertime" className="w-4 h-4 accent-gold" />
+                    <label htmlFor="allowOvertime" className="text-[10px] uppercase tracking-widest text-white/60 font-bold cursor-pointer">Allow Overtime Compensation</label>
+                  </div>
+                </div>
               </div>
               <div className="flex gap-4">
-                <button type="button" onClick={() => setShowStaffModal(false)} className="flex-1 py-4 border border-white/10 text-white font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all text-center">Cancel</button>
-                <button type="submit" className="flex-1 py-4 bg-gold text-black font-bold uppercase tracking-widest text-[10px] hover:bg-white transition-all text-center">Save Changes</button>
+                <button type="button" onClick={() => setShowStaffModal(false)} className="flex-1 py-4 border border-white/10 text-white font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-white/5 transition-all text-center rounded-xl">Cancel</button>
+                <button type="submit" className="flex-1 py-4 bg-gold text-black font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-white transition-all text-center rounded-xl">
+                  {editingStaff ? 'Update Member' : 'Deploy Member'}
+                </button>
               </div>
             </form>
           </motion.div>
@@ -2143,43 +2838,309 @@ export default function AdminDashboard() {
       {/* Shift Modal */}
       {showShiftModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 backdrop-blur-xl bg-black/60">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#0A0A0A] border border-white/10 p-10 rounded-3xl shadow-3xl w-full max-w-lg">
-            <h2 className="text-2xl font-serif italic text-white mb-8 text-left">{editingShift ? 'Adjust Assignment' : 'New Assignment'}</h2>
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="bg-[#121212] border border-white/10 p-10 rounded-2xl shadow-3xl w-full max-w-xl overflow-y-auto max-h-[90vh]"
+          >
+            <div className="flex justify-between items-center mb-8">
+              <h2 className="text-3xl font-serif italic text-white uppercase tracking-tight">{editingShift ? 'Adjust Assignment' : 'New Assignment'}</h2>
+              <button onClick={() => setShowShiftModal(false)} className="p-2 hover:bg-white/5 rounded-full text-white transition-colors"><X size={24}/></button>
+            </div>
+            
             <form onSubmit={handleSaveShift} className="space-y-6">
               <div className="space-y-1 text-left">
-                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Select Staff</label>
-                <select name="staffId" defaultValue={editingShift?.staffId} required className="w-full bg-white/5 border border-white/10 p-3 rounded-lg text-white outline-none focus:border-gold">
-                  <option value="" className="bg-[#121212]">Choose member...</option>
+                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Select Staff Member</label>
+                <select name="staffId" defaultValue={editingShift?.staffId} required className="w-full bg-white/5 border border-white/10 p-3 rounded-lg text-white outline-none focus:border-gold transition-colors">
+                  <option value="" className="bg-[#121212]">Choose member from terminal...</option>
                   {staff.map(s => <option key={s.id} value={s.id} className="bg-[#121212]">{s.name} ({s.role})</option>)}
                 </select>
               </div>
               <div className="space-y-1 text-left">
-                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Position/Department</label>
-                <input name="position" defaultValue={editingShift?.position} required placeholder="e.g. Bar Terminal A" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Duty Station / Department</label>
+                <input name="position" defaultValue={editingShift?.position} required placeholder="e.g. Bar Terminal A" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
               </div>
               <div className="space-y-1 text-left">
-                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Assignment Date</label>
-                <input name="date" type="date" defaultValue={editingShift?.date} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Scheduled Date</label>
+                <input name="date" type="date" defaultValue={editingShift?.date} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Start Time</label>
-                  <input name="startTime" type="time" defaultValue={editingShift?.startTime} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  <input name="startTime" type="time" defaultValue={editingShift?.startTime} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
                 </div>
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">End Time</label>
-                  <input name="endTime" type="time" defaultValue={editingShift?.endTime} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  <input name="endTime" type="time" defaultValue={editingShift?.endTime} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
                 </div>
               </div>
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Duty Notes</label>
-                <textarea name="note" defaultValue={editingShift?.note} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <textarea name="note" defaultValue={editingShift?.note} placeholder="Operational constraints or special instructions..." className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors" />
               </div>
               <div className="flex gap-4">
-                <button type="button" onClick={() => setShowShiftModal(false)} className="flex-1 py-4 border border-white/10 text-white font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all text-center">Cancel</button>
-                <button type="submit" className="flex-1 py-4 bg-gold text-black font-bold uppercase tracking-widest text-[10px] hover:bg-white transition-all text-center">Confirm Assignment</button>
+                <button type="button" onClick={() => setShowShiftModal(false)} className="flex-1 py-4 border border-white/10 text-white font-bold uppercase tracking-[0.2em] text-[10px] hover:bg-white/5 transition-all text-center rounded-xl">Cancel</button>
+                <button type="submit" className="flex-1 py-4 bg-gold text-black font-bold uppercase tracking-[0.3em] text-[10px] hover:bg-white transition-all text-center rounded-xl">
+                  {editingShift ? 'Confirm Adjustmnet' : 'Deploy Assignment'}
+                </button>
               </div>
             </form>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Pay Slip Modal */}
+      {showPaySlipModal && selectedShiftForSlip && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/80">
+          <motion.div 
+            initial={{ opacity: 0, y: 50 }} 
+            animate={{ opacity: 1, y: 0 }} 
+            className="bg-white text-black p-12 rounded-lg shadow-4xl w-full max-w-md font-mono"
+            style={{ '@media print': { margin: 0, boxShadow: 'none' } } as any}
+          >
+            <div className="text-center mb-8 border-b-2 border-black pb-4">
+              <h1 className="text-2xl font-bold uppercase tracking-tight">Kiss Me Store</h1>
+              <p className="text-[10px] uppercase font-bold text-black/60">Official Payroll Statement</p>
+            </div>
+
+            <div className="space-y-4 mb-8">
+              <div className="flex justify-between border-b border-black/10 pb-1">
+                <span className="uppercase text-[10px] font-bold">Employee</span>
+                <span className="font-bold">{selectedShiftForSlip.staffName}</span>
+              </div>
+              <div className="flex justify-between border-b border-black/10 pb-1">
+                <span className="uppercase text-[10px] font-bold">Duty Date</span>
+                <span>{selectedShiftForSlip.date}</span>
+              </div>
+              <div className="flex justify-between border-b border-black/10 pb-1">
+                <span className="uppercase text-[10px] font-bold">Position</span>
+                <span>{selectedShiftForSlip.position}</span>
+              </div>
+              <div className="flex justify-between border-b border-black/10 pb-1">
+                <span className="uppercase text-[10px] font-bold">Duty Hours</span>
+                <span>{selectedShiftForSlip.startTime} - {selectedShiftForSlip.endTime}</span>
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-8 bg-black/5 p-4 rounded">
+              <div className="flex justify-between">
+                <span className="text-[10px] uppercase font-bold">Basic Pay (Daily)</span>
+                <span>₱{(selectedShiftForSlip.earnedAmount || 0) + (selectedShiftForSlip.deductions || 0) - (selectedShiftForSlip.overtimePay || 0)}</span>
+              </div>
+              <div className="flex justify-between text-blue-600">
+                <span className="text-[10px] uppercase font-bold">Overtime Pay (+)</span>
+                <span>₱{selectedShiftForSlip.overtimePay || 0}</span>
+              </div>
+              <div className="flex justify-between text-red-600">
+                <span className="text-[10px] uppercase font-bold">Deductions (-)</span>
+                <span>₱{selectedShiftForSlip.deductions || 0}</span>
+              </div>
+              <div className="border-t border-black/20 pt-2 mt-2 flex justify-between text-lg font-bold">
+                <span className="text-[12px] uppercase">Net Salary</span>
+                <span>₱{selectedShiftForSlip.earnedAmount}</span>
+              </div>
+            </div>
+
+            <div className="text-[8px] text-center text-black/40 mb-8 italic">
+              * This is a system-generated pay slip. Securely processed by Baymax Terminal.
+            </div>
+
+            <div className="flex gap-4 print:hidden">
+              <button 
+                onClick={() => window.print()} 
+                className="flex-1 py-3 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded hover:bg-gold hover:text-black transition-all"
+              >
+                Print Slip
+              </button>
+              <button 
+                onClick={() => setShowPaySlipModal(false)}
+                className="flex-1 py-3 border border-black/20 text-black font-bold uppercase tracking-widest text-[10px] rounded hover:bg-black/5 transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Audit Detail Modal */}
+      {showAuditDetail && selectedAuditMonth && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/90">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="bg-white text-black p-12 rounded-lg shadow-4xl w-full max-w-2xl font-mono relative overflow-hidden"
+          >
+            {/* Security Watermark */}
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none rotate-12">
+              <BarChart3 size={200} />
+            </div>
+
+            <div className="flex justify-between items-start mb-10 border-b-2 border-black pb-6">
+              <div className="text-left">
+                <h2 className="text-3xl font-extrabold uppercase tracking-tighter">Financial Audit</h2>
+                <p className="text-[10px] text-black/60 font-bold uppercase tracking-widest mt-1">Kiss Me Store Terminal Registry</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] font-bold uppercase tracking-widest text-black/40">Report Sequence</p>
+                <p className="font-bold">#AUD-{selectedAuditMonth.year}{selectedAuditMonth.month + 1}</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-12 mb-10">
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-extrabold uppercase tracking-widest border-b border-black/10 pb-2 text-left">Operational Period</h3>
+                <div className="space-y-4 text-left">
+                  <div>
+                    <p className="text-[9px] text-black/40 font-bold uppercase">Fiscal Month</p>
+                    <p className="text-lg font-bold">{selectedAuditMonth.label}</p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] text-black/40 font-bold uppercase">Terminal Location</p>
+                    <p className="text-sm font-bold">Tagoloan Branch Main</p>
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-6">
+                <h3 className="text-[10px] font-extrabold uppercase tracking-widest border-b border-black/10 pb-2 text-right">Summary Metrics</h3>
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-black/60">Gross Revenue</span>
+                    <span className="font-bold">₱{selectedAuditMonth.sales.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Payroll Costs (-)</span>
+                    <span className="font-bold">₱{selectedAuditMonth.payroll.toLocaleString()}</span>
+                  </div>
+                  <div className="border-t border-black/20 pt-2 mt-2 flex justify-between text-xl font-black">
+                    <span>NET GAIN</span>
+                    <span className={selectedAuditMonth.profit >= 0 ? 'text-green-600' : 'text-red-600'}>
+                      ₱{selectedAuditMonth.profit.toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-black/5 p-6 rounded mb-10">
+              <p className="text-[10px] font-bold uppercase tracking-widest mb-4 opacity-40">Intelligence Verification</p>
+              <div className="grid grid-cols-3 gap-4 text-center">
+                <div>
+                  <p className="text-[9px] font-bold">Efficiency</p>
+                  <p className="text-sm font-bold">{((selectedAuditMonth.profit / (selectedAuditMonth.sales || 1)) * 100).toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold">Labor Ratio</p>
+                  <p className="text-sm font-bold">{((selectedAuditMonth.payroll / (selectedAuditMonth.sales || 1)) * 100).toFixed(1)}%</p>
+                </div>
+                <div>
+                  <p className="text-[9px] font-bold">Status</p>
+                  <p className="text-[9px] font-bold uppercase text-green-600">Verified</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 print:hidden">
+              <button 
+                onClick={() => window.print()} 
+                className="flex-1 py-4 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded-lg hover:bg-gold hover:text-black transition-all shadow-xl"
+              >
+                Execute Print
+              </button>
+              <button 
+                onClick={() => setShowAuditDetail(false)}
+                className="flex-1 py-4 border-2 border-black text-black font-bold uppercase tracking-widest text-[10px] rounded-lg hover:bg-black/5 transition-all"
+              >
+                Close Terminal
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Payroll Summary Modal */}
+      {showPayrollSummary && selectedAuditMonth && (
+        <div className="fixed inset-0 z-[130] flex items-center justify-center p-6 backdrop-blur-3xl bg-black/95">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }} 
+            animate={{ opacity: 1, scale: 1 }} 
+            className="bg-white text-black p-10 rounded shadow-4xl w-full max-w-4xl font-mono overflow-y-auto max-h-[90vh]"
+          >
+            <div className="text-center mb-10 border-b-4 border-double border-black pb-6">
+              <h2 className="text-3xl font-black uppercase tracking-tighter">Kiss Me Store</h2>
+              <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-black/60 mt-1">Monthly Payroll Reconciliation Registry</p>
+              <div className="flex justify-center gap-8 mt-4 text-[9px] font-bold uppercase">
+                <span>Period: {selectedAuditMonth.label}</span>
+                <span>Terminal ID: TK-0294</span>
+              </div>
+            </div>
+
+            <table className="w-full text-left text-[10px]">
+              <thead className="border-b-2 border-black">
+                <tr>
+                  <th className="py-2 font-black uppercase">Staff Name</th>
+                  <th className="py-2 font-black uppercase text-center">Duty Date</th>
+                  <th className="py-2 font-black uppercase text-right">Standard</th>
+                  <th className="py-2 font-black uppercase text-right">OT Pay</th>
+                  <th className="py-2 font-black uppercase text-right">Deducts</th>
+                  <th className="py-2 font-black uppercase text-right">Net Salary</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-black/10">
+                {shifts
+                  .filter(shift => {
+                    const d = new Date(shift.date);
+                    return d.getFullYear() === selectedAuditMonth.year && d.getMonth() === selectedAuditMonth.month && shift.status === 'completed';
+                  })
+                  .map(s => (
+                    <tr key={s.id}>
+                      <td className="py-3 font-bold uppercase">{s.staffName}</td>
+                      <td className="py-3 text-center">{s.date}</td>
+                      <td className="py-3 text-right">₱{(s.earnedAmount || 0) + (s.deductions || 0) - (s.overtimePay || 0)}</td>
+                      <td className="py-3 text-right">₱{s.overtimePay || 0}</td>
+                      <td className="py-3 text-right text-red-600">₱{s.deductions || 0}</td>
+                      <td className="py-3 text-right font-black">₱{s.earnedAmount}</td>
+                    </tr>
+                  ))}
+              </tbody>
+              <tfoot className="border-t-2 border-black pt-4">
+                <tr className="font-black text-lg">
+                  <td colSpan={5} className="py-6 uppercase text-right">Grand Total:</td>
+                  <td className="py-6 text-right">₱{selectedAuditMonth.payroll.toLocaleString()}</td>
+                </tr>
+              </tfoot>
+            </table>
+
+            <div className="mt-10 pt-10 border-t border-black/10 flex justify-between items-end">
+              <div className="space-y-8 text-left">
+                <div>
+                  <div className="w-48 border-b border-black"></div>
+                  <p className="text-[8px] uppercase font-bold mt-2">Prepared By: Terminal Admin</p>
+                </div>
+                <div>
+                  <div className="w-48 border-b border-black"></div>
+                  <p className="text-[8px] uppercase font-bold mt-2">Verified By: Operations Intelligence</p>
+                </div>
+              </div>
+              <div className="flex gap-4 print:hidden">
+                <button 
+                  onClick={() => window.print()}
+                  className="px-8 py-3 bg-black text-white font-bold uppercase tracking-widest text-[10px] rounded hover:bg-gold hover:text-black transition-all"
+                >
+                  Confirm & Print
+                </button>
+                <button 
+                  onClick={() => setShowPayrollSummary(false)}
+                  className="px-8 py-3 border border-black/20 text-black font-bold uppercase tracking-widest text-[10px] rounded hover:bg-black/5 transition-all"
+                >
+                  Exit Registry
+                </button>
+              </div>
+            </div>
+            
+            <div className="mt-8 text-center text-[7px] text-black/30 uppercase tracking-[0.5em] italic">
+              Authenticity Verified • System Cluster #409978713286
+            </div>
           </motion.div>
         </div>
       )}

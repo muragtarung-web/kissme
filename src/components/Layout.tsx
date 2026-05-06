@@ -4,16 +4,20 @@ import { Menu as MenuIcon, ShoppingCart, User, LogOut, ChevronRight, Globe, Awar
 import { useAuth } from '../hooks/useAuth';
 import { useLanguage } from '../hooks/useLanguage';
 import { useTheme } from '../hooks/useTheme';
+import { useCart } from '../hooks/useCart';
 import { auth } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState } from 'react';
+import CartDrawer from './CartDrawer';
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { itemCount } = useCart();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
 
   const handleLogout = async () => {
     await auth.signOut();
@@ -31,6 +35,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="bg-glow-red" />
         <div className="bg-glow-gold" />
       </div>
+
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
 
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
@@ -70,9 +76,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <span className="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 group-hover:text-gold">{language}</span>
             </button>
 
-            <button className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors relative group">
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors relative group"
+            >
               <ShoppingCart size={18} className="text-zinc-700 dark:text-zinc-200" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] text-white flex items-center justify-center rounded-full font-bold shadow-lg shadow-primary/40">0</span>
+              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] text-white flex items-center justify-center rounded-full font-bold shadow-lg shadow-primary/40">{itemCount}</span>
             </button>
             
             {user ? (
@@ -193,8 +202,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-zinc-900 text-center text-sm text-zinc-600">
-          © 2026 Kiss me Store & Food Corner. All rights reserved.
+        <div className="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-zinc-900 relative flex flex-col md:flex-row justify-center items-center gap-4 text-sm text-zinc-600">
+          <div className="text-center">© 2026 Kiss me Store & Food Corner. All rights reserved.</div>
+          <div className="md:absolute md:right-4 text-[10px] uppercase tracking-widest font-bold">
+            Develop by : <span className="text-gold">ELMAR R, FUNCION</span>
+          </div>
         </div>
       </footer>
     </div>

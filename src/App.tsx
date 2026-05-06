@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth';
 import { LanguageProvider } from './hooks/useLanguage';
+import { CartProvider } from './hooks/useCart';
 import { LoadingProvider, useLoading } from './hooks/useLoading';
 import LoadingScreen from './components/LoadingScreen';
 import Layout from './components/Layout';
@@ -16,10 +17,22 @@ import { Toaster } from 'react-hot-toast';
 
 import { ProtectedRoute } from './components/ProtectedRoute';
 
+import { AnimatePresence } from 'motion/react';
+
+import { useAuth } from './hooks/useAuth';
+
 function GlobalLoading() {
   const { isLoading, message } = useLoading();
-  if (!isLoading) return null;
-  return <LoadingScreen message={message} />;
+  const { loading: authLoading } = useAuth();
+  
+  const activeLoading = isLoading || authLoading;
+  const currentMessage = authLoading && !isLoading ? "Kiss me Store is Establishing Secure Link..." : message;
+
+  return (
+    <AnimatePresence>
+      {activeLoading && <LoadingScreen message={currentMessage} />}
+    </AnimatePresence>
+  );
 }
 
 export default function App() {
@@ -28,31 +41,36 @@ export default function App() {
       <LanguageProvider>
         <LoadingProvider>
           <AuthProvider>
-            <BrowserRouter>
+            <CartProvider>
+              <BrowserRouter>
               <GlobalLoading />
-              <Layout>
-                <Routes>
-                  <Route path="/" element={<Home />} />
-                  <Route path="/menu" element={<Menu />} />
-                  <Route path="/events" element={<Events />} />
-                  <Route path="/reservations" element={
-                    <ProtectedRoute>
-                      <Reservations />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/admin" element={
-                    <ProtectedRoute adminOnly>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/login" element={<Login />} />
-                </Routes>
-              </Layout>
+              <Routes>
+                <Route path="/admin" element={
+                  <ProtectedRoute adminOnly>
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="*" element={
+                  <Layout>
+                    <Routes>
+                      <Route path="/" element={<Home />} />
+                      <Route path="/menu" element={<Menu />} />
+                      <Route path="/events" element={<Events />} />
+                      <Route path="/reservations" element={
+                        <ProtectedRoute>
+                          <Reservations />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <Profile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/login" element={<Login />} />
+                    </Routes>
+                  </Layout>
+                } />
+              </Routes>
               <Toaster position="bottom-right" toastOptions={{
                 style: {
                   background: '#0D0D0D',
@@ -61,7 +79,8 @@ export default function App() {
                 }
               }} />
             </BrowserRouter>
-          </AuthProvider>
+          </CartProvider>
+        </AuthProvider>
         </LoadingProvider>
       </LanguageProvider>
     </ThemeProvider>
