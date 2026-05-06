@@ -41,7 +41,7 @@ export default function Profile() {
     return () => unsubs.forEach(unsub => unsub());
   }, [user]);
 
-  if (authLoading) return null;
+  if (authLoading) return <LoadingScreen />;
   if (!user) return <Navigate to="/login" />;
 
   const tierColors = {
@@ -55,11 +55,11 @@ export default function Profile() {
 
   if (user.role === 'admin') {
     return (
-      <div className="max-w-7xl mx-auto px-6 py-24 text-white min-h-screen">
+      <div className="max-w-7xl mx-auto px-6 py-24 text-zinc-900 dark:text-white min-h-screen">
         <div className="flex flex-col md:flex-row items-center justify-between gap-12 mb-20 px-2">
           <div className="flex flex-col md:flex-row items-center gap-12">
             <div className="relative">
-              <div className="w-40 h-40 rounded-[2.5rem] bg-gradient-to-br from-gold/20 to-black border border-gold/30 flex items-center justify-center text-5xl font-serif italic text-gold shadow-2xl">
+              <div className="w-40 h-40 rounded-[2.5rem] bg-gradient-to-br from-gold/20 to-zinc-100 dark:to-black border border-gold/30 flex items-center justify-center text-5xl font-serif italic text-gold shadow-2xl">
                 {user.displayName.charAt(0)}
               </div>
               <div className="absolute -bottom-4 -right-4 bg-gold text-black px-4 py-2 rounded-xl shadow-2xl font-bold uppercase tracking-widest text-[10px]">
@@ -70,21 +70,21 @@ export default function Profile() {
             <div className="text-center md:text-left">
               <span className="text-gold uppercase tracking-[0.4em] text-[10px] font-bold mb-4 block">Secure Administrator Access</span>
               <h1 className="text-6xl font-serif font-bold italic mb-2">Welcome Back, <span className="text-zinc-600">Admin</span></h1>
-              <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold">{user.email}</p>
+              <p className="text-zinc-500 dark:text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold">{user.email}</p>
             </div>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 flex items-center gap-8 shadow-2xl">
+          <div className="bg-zinc-100 dark:bg-white/5 backdrop-blur-xl border border-zinc-200 dark:border-white/10 rounded-3xl p-8 flex items-center gap-8 shadow-2xl">
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Terminal Status</p>
-              <div className="text-xl font-mono text-green-400 flex items-center justify-end gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" /> ONLINE
+              <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-white/40 mb-1">Terminal Status</p>
+              <div className="text-xl font-mono text-green-600 dark:text-green-400 flex items-center justify-end gap-2">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" /> ONLINE
               </div>
             </div>
-            <div className="h-10 w-px bg-white/10" />
+            <div className="h-10 w-px bg-zinc-200 dark:bg-white/10" />
             <div className="text-right">
-              <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Last Sync</p>
-              <p className="text-xl font-mono text-white">Just Now</p>
+              <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-white/40 mb-1">Last Sync</p>
+              <p className="text-xl font-mono text-zinc-900 dark:text-white">Just Now</p>
             </div>
           </div>
         </div>
@@ -95,27 +95,27 @@ export default function Profile() {
             title="Command Center" 
             desc="Global terminal control, financial overview, and occupancy monitoring."
             link="/admin"
-            color="border-white/10 bg-white/5"
+            color="border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 text-zinc-900 dark:text-white"
           />
           <AdminPortalCard 
             icon={<Award size={32} />} 
             title="POS Terminal" 
             desc="Real-time transaction interface with direct inventory deduction."
             link="/admin"
-            color="border-gold/30 bg-gold/5"
+            color="border-gold/30 bg-gold/5 text-zinc-900 dark:text-white"
           />
           <AdminPortalCard 
             icon={<Package size={32} />} 
             title="Entity CMS" 
             desc="Manage culinary selections, event soundscapes, and digital moments."
             link="/admin"
-            color="border-white/10 bg-white/5"
+            color="border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 text-zinc-900 dark:text-white"
           />
         </div>
 
-        <div className="mt-20 border-t border-white/5 pt-20">
+        <div className="mt-20 border-t border-zinc-200 dark:border-white/5 pt-20">
           <div className="flex items-center justify-between mb-12 text-left">
-             <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/20 font-bold">System Maintenance</h3>
+             <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-400 dark:text-white/20 font-bold">System Maintenance</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
              <MaintenanceBox label="Registered Orders" value={orderCount.toString()} />
@@ -129,10 +129,10 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-24 text-white">
+    <div className="max-w-4xl mx-auto px-6 py-24 text-zinc-900 dark:text-white">
       <div className="flex flex-col md:flex-row items-center gap-12 mb-20 px-2">
         <div className="relative">
-          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center text-4xl font-serif italic text-white text-center">
+          <div className="w-32 h-32 rounded-3xl bg-gradient-to-br from-zinc-100 to-zinc-50 dark:from-white/10 dark:to-white/5 border border-zinc-200 dark:border-white/10 flex items-center justify-center text-4xl font-serif italic text-zinc-900 dark:text-white text-center">
             {user.displayName.charAt(0)}
           </div>
           <div className="absolute -bottom-2 -right-2 bg-gold text-black p-2 rounded-xl shadow-xl">
@@ -142,7 +142,7 @@ export default function Profile() {
         
         <div className="text-center md:text-left">
           <h1 className="text-5xl font-serif italic mb-2">{user.displayName}</h1>
-          <p className="text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold">{user.email}</p>
+          <p className="text-zinc-500 dark:text-white/40 text-[10px] uppercase tracking-[0.4em] font-bold">{user.email}</p>
         </div>
       </div>
 
@@ -154,7 +154,7 @@ export default function Profile() {
           </div>
           
           <span className="text-[10px] uppercase tracking-[0.4em] font-bold block mb-2">{t('loyaltyProgram')}</span>
-          <h2 className="text-6xl font-serif italic font-bold mb-8">{user.tier} <span className="text-white/20">Tier</span></h2>
+          <h2 className="text-6xl font-serif italic font-bold mb-8">{user.tier} <span className="text-zinc-400/40 dark:text-white/20">Tier</span></h2>
           
           <div className="space-y-6">
             <div className="flex justify-between items-end">
@@ -170,7 +170,7 @@ export default function Profile() {
             </div>
 
             {user.tier !== 'Gold' && (
-              <div className="h-1.5 w-full bg-black/20 rounded-full overflow-hidden">
+              <div className="h-1.5 w-full bg-black/10 dark:bg-black/20 rounded-full overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
@@ -183,12 +183,12 @@ export default function Profile() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <StatBox icon={<History size={18}/>} label="Orders" value={orderCount.toString()} />
-          <StatBox icon={<Package size={18}/>} label="Reserved" value={reservationCount.toString()} />
-          <div className="col-span-2 p-8 bg-white/5 border border-white/10 rounded-2xl flex items-center justify-between transition-colors">
+          <StatBox icon={<History size={18}/>} label="Lifetime Orders" value={orderCount.toString()} />
+          <StatBox icon={<Package size={18}/>} label="Total Reservations" value={reservationCount.toString()} />
+          <div className="col-span-2 p-8 bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl flex items-center justify-between transition-colors">
              <div className="text-left">
-                <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">Lifetime Savings</p>
-                <p className="text-2xl font-serif font-bold text-white">₱{(user.points / 10).toLocaleString()}.00</p>
+                <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-white/40 mb-1">CASH REDEMPTION VALUE</p>
+                <p className="text-2xl font-serif font-bold text-zinc-900 dark:text-white">₱{(user.points / 10).toLocaleString()}.00</p>
              </div>
              <div className="w-12 h-12 rounded-xl bg-gold/10 text-gold flex items-center justify-center shadow-inner">
                 <Star size={24}/>

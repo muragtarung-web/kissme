@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, ShoppingCart, AlertCircle, 
   BarChart3, Settings, Package, Calendar, 
   LayoutDashboard, Plus, DollarSign, Edit, Trash2, X, Search,
-  Camera, Globe, Heart, Bell, ArrowRight, Eye, Grid
+  Camera, Globe, Heart, Bell, ArrowRight, Eye, Grid, LogOut
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Order, Product, Category, Event as AppEvent, Moment, SiteSettings, Reminder, Reservation, Staff, Shift } from '../../types';
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
       
       if (reminder.type === 'in-app' || reminder.type === 'both') {
         const notificationPromises = eventAttendees.map(attendee => {
-          return addDoc(collection(db, 'notifications'), {
+          return addDoc(collection(db, 'inAppNotifications'), {
             userId: attendee.customerId,
             title: reminder.subject || (event ? `Reminder: ${event.title}` : 'Event Reminder'),
             message: reminder.message,
@@ -190,18 +190,33 @@ export default function AdminDashboard() {
     try {
       showLoading(`Updating reservation to ${status}...`);
       
-      // Find the reservation details for the email
       const reservation = reservations.find(r => r.id === id);
       
       await updateDoc(doc(db, 'reservations', id), { status });
-      toast.success(`Reservation ${status}`, { position: 'bottom-right' });
+      toast.success(`Booking ${status.toUpperCase()}`, { position: 'bottom-right' });
 
-      // Create in-app notification
       if (reservation && reservation.customerId) {
+        let title = 'Booking Update';
+        let message = `Your reservation for ${reservation.date} ${reservation.time} has been ${status.toUpperCase()}.`;
+        
+        if (status === 'confirmed') {
+          title = 'Reservation Confirmed! 🎉';
+          message = `Great news! Your booking at Kiss Me Store for ${reservation.date} at ${reservation.time} is now CONFIRMED. We'll be ready for you.`;
+        } else if (status === 'cancelled') {
+          title = 'Booking Cancelled 🔴';
+          message = `Your reservation for ${reservation.date} has been cancelled. If this was a mistake, please reach out to us.`;
+        } else if (status === 'booked') {
+          title = 'Table Secured 📍';
+          message = `You are now listed as checked-in for your reservation on ${reservation.date}. Enjoy your stay!`;
+        } else if (status === 'completed') {
+          title = 'Thank You! ✨';
+          message = `We hope you enjoyed your visit! Your reservation on ${reservation.date} is now marked as complete.`;
+        }
+
         await addDoc(collection(db, 'inAppNotifications'), {
           userId: reservation.customerId,
-          title: 'Booking Update',
-          message: `Your reservation at Kiss Me Store for ${reservation.date} ${reservation.time} has been ${status.toUpperCase()}.`,
+          title,
+          message,
           read: false,
           createdAt: new Date(),
           type: 'reservation',
@@ -479,13 +494,32 @@ export default function AdminDashboard() {
           })
         });
 
-        // Add notification for each order in the batch
         if (order && order.customerId) {
           const notifRef = doc(collection(db, 'inAppNotifications'));
+          let title = 'Order Update';
+          let message = `Order #${id.slice(-6)} status: ${status.toUpperCase()}.`;
+
+          if (status === 'confirmed') {
+            title = 'Order Confirmed ✅';
+            message = `Your order #${id.slice(-6)} has been accepted and confirmed by the staff.`;
+          } else if (status === 'cooking') {
+            title = 'In the Kitchen 🍳';
+            message = `Chef is now preparing your items for order #${id.slice(-6)}! Get ready!`;
+          } else if (status === 'ready') {
+            title = 'Order Ready! 🍱';
+            message = `Your tray for order #${id.slice(-6)} is now ready for pickup or service.`;
+          } else if (status === 'delivered' || status === 'completed') {
+            title = 'Order Served ✨';
+            message = `Enjoy your meal! Order #${id.slice(-6)} has been marked as fulfilled.`;
+          } else if (status === 'cancelled') {
+            title = 'Order Cancelled 🔴';
+            message = `Order #${id.slice(-6)} could not be fulfilled and has been cancelled.`;
+          }
+
           batch.set(notifRef, {
             userId: order.customerId,
-            title: 'Order Tracking Update',
-            message: `Order #${id.slice(-6)} status has been updated to: ${status.toUpperCase()} via bulk process.`,
+            title,
+            message: message + ' (Bulk Update)',
             read: false,
             createdAt: new Date(),
             type: 'order',
@@ -539,12 +573,37 @@ export default function AdminDashboard() {
         })
       });
 
-      // Create in-app notification
       if (order && order.customerId) {
+        let title = 'Order Tracking Update';
+        let message = `Order #${id.slice(-6)} status updated to ${status.toUpperCase()}.`;
+
+        if (status === 'confirmed') {
+          title = 'Order Confirmed ✅';
+          message = `Great news! Order #${id.slice(-6)} has been verified and confirmed.`;
+        } else if (status === 'cooking') {
+          title = 'Kitchen is Fired Up! 🔥';
+          message = `Our team is now busy preparing your order #${id.slice(-6)}. It won't be long!`;
+        } else if (status === 'ready') {
+          title = 'Order is Ready! 🛎️';
+          message = `Your order #${id.slice(-6)} is piping hot and ready for you.`;
+        } else if (status === 'delivery') {
+          title = 'Order Out for Delivery 🛵';
+          message = `Our courier is on the way with your order #${id.slice(-6)}!`;
+        } else if (status === 'delivered') {
+          title = 'Order Delivered 🏠';
+          message = `Your order #${id.slice(-6)} has been successfully delivered. Satisfaction guaranteed!`;
+        } else if (status === 'completed') {
+          title = 'Transaction Completed ✨';
+          message = `Order #${id.slice(-6)} is now officially complete. Thank you for choosing Kiss Me!`;
+        } else if (status === 'cancelled') {
+          title = 'Order Cancelled 🔴';
+          message = `We regret to inform you that order #${id.slice(-6)} has been cancelled.`;
+        }
+
         await addDoc(collection(db, 'inAppNotifications'), {
           userId: order.customerId,
-          title: 'Order Tracking Update',
-          message: `Order #${id.slice(-6)} status has been updated to: ${status.toUpperCase()}.`,
+          title,
+          message,
           read: false,
           createdAt: new Date(),
           type: 'order',
@@ -1049,7 +1108,7 @@ export default function AdminDashboard() {
           />
         </nav>
 
-        <div className="p-6 bg-[#050505] border-t border-white/5">
+        <div className="p-6 bg-[#050505] border-t border-white/5 space-y-4">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 rounded bg-gradient-to-br from-gold to-[#8E6E32] flex items-center justify-center font-bold text-black text-xs">AD</div>
             <div>
@@ -1057,6 +1116,17 @@ export default function AdminDashboard() {
               <p className="text-[9px] text-white/40 uppercase tracking-widest font-bold">System Secure</p>
             </div>
           </div>
+          
+          <button 
+            onClick={async () => {
+              await auth.signOut();
+              window.location.href = '/';
+            }}
+            className="w-full p-3 text-[10px] uppercase font-bold tracking-widest cursor-pointer transition-all flex items-center justify-center gap-3 rounded border border-white/10 text-white/40 hover:text-red-500 hover:bg-red-500/10 hover:border-red-500/20 group"
+          >
+            <LogOut size={12} className="group-hover:animate-pulse" />
+            <span>Sign Out Terminal</span>
+          </button>
         </div>
       </aside>
 
@@ -1754,8 +1824,15 @@ export default function AdminDashboard() {
           {view === 'orders' && (
             <div className="space-y-10">
               <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-                <div>
-                  <h1 className="text-4xl font-serif italic mb-2 text-white">Order <span className="text-white/20">Terminal</span></h1>
+                <div className="text-left">
+                  <h1 className="text-4xl font-serif italic mb-2 text-white flex items-center gap-4">
+                    Order <span className="text-white/20">Terminal</span>
+                    {orders.filter(o => o.status === 'pending').length > 0 && (
+                      <span className="bg-gold text-black text-[10px] font-black px-3 py-1 rounded-full animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                        {orders.filter(o => o.status === 'pending').length} PENDING
+                      </span>
+                    )}
+                  </h1>
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Live flow of guest transactions and fulfillment</p>
                 </div>
                 <div className="flex items-center gap-4">
@@ -1770,11 +1847,11 @@ export default function AdminDashboard() {
                             e.target.value = '';
                           }
                         }}
-                        className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-white outline-none cursor-pointer"
+                        className="bg-transparent text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white outline-none cursor-pointer"
                       >
-                        <option value="" className="bg-[#121212]">Bulk Status Update</option>
+                        <option value="" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Bulk Status Update</option>
                         {['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'].map(status => (
-                          <option key={status} value={status} className="bg-[#121212]">{status}</option>
+                          <option key={status} value={status} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{status}</option>
                         ))}
                       </select>
                       <button 
@@ -1840,13 +1917,13 @@ export default function AdminDashboard() {
                               <select 
                                 value={order.status}
                                 onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                className={`bg-black/40 border border-white/10 rounded px-2 py-1 text-[9px] font-bold uppercase tracking-widest outline-none focus:border-gold transition-colors ${
+                                className={`bg-white/5 border border-white/10 rounded px-2 py-1 text-[9px] font-bold uppercase tracking-widest outline-none focus:border-gold transition-colors ${
                                   order.status === 'completed' ? 'text-green-500' : 
                                   order.status === 'cancelled' ? 'text-red-500' : 'text-primary'
                                 }`}
                               >
                                 {['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'].map(status => (
-                                  <option key={status} value={status} className="bg-[#121212] text-white font-bold">{status}</option>
+                                  <option key={status} value={status} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white font-bold">{status}</option>
                                 ))}
                               </select>
                             </td>
@@ -2216,8 +2293,15 @@ export default function AdminDashboard() {
 
           {view === 'reservations' && (
             <div className="space-y-10">
-              <header>
-                <h1 className="text-4xl font-serif italic mb-2 text-white">Reservations <span className="text-white/20">Registry</span></h1>
+              <header className="text-left">
+                <h1 className="text-4xl font-serif italic mb-2 text-white flex items-center gap-4">
+                  Reservations <span className="text-white/20">Registry</span>
+                  {reservations.filter(r => r.status === 'pending').length > 0 && (
+                    <span className="bg-gold text-black text-[10px] font-black px-3 py-1 rounded-full animate-pulse shadow-[0_0_20px_rgba(212,175,55,0.4)]">
+                      {reservations.filter(r => r.status === 'pending').length} NEW
+                    </span>
+                  )}
+                </h1>
                 <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Comprehensive logs of all guest arrivals and table bindings</p>
               </header>
 
@@ -2442,8 +2526,8 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Category</label>
-                  <select name="categoryId" defaultValue={editingProduct?.categoryId} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white">
-                    {categories.map(c => <option key={c.id} value={c.id} className="bg-[#121212]">{c.name}</option>)}
+                  <select name="categoryId" defaultValue={editingProduct?.categoryId} className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded outline-none focus:border-gold text-zinc-900 dark:text-white">
+                    {categories.map(c => <option key={c.id} value={c.id} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{c.name}</option>)}
                   </select>
                 </div>
               </div>
@@ -2643,11 +2727,11 @@ export default function AdminDashboard() {
                     name="eventId" 
                     defaultValue={editingReminder?.eventId || selectedEventIdForReminder || ''} 
                     required 
-                    className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors"
+                    className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded outline-none focus:border-gold text-zinc-900 dark:text-white transition-colors"
                   >
-                    <option value="" className="bg-[#121212]">Select an event</option>
+                    <option value="" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Select an event</option>
                     {events.map(e => (
-                      <option key={e.id} value={e.id} className="bg-[#121212]">{e.title} ({e.date})</option>
+                      <option key={e.id} value={e.id} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{e.title} ({e.date})</option>
                     ))}
                   </select>
                 </div>
@@ -2680,10 +2764,10 @@ export default function AdminDashboard() {
                   </div>
                   <div className="space-y-1">
                     <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Channel</label>
-                    <select name="type" defaultValue={editingReminder?.type || 'both'} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors">
-                      <option value="in-app" className="bg-[#121212]">In-App Only</option>
-                      <option value="email" className="bg-[#121212]">Email (Mock)</option>
-                      <option value="both" className="bg-[#121212]">Both</option>
+                    <select name="type" defaultValue={editingReminder?.type || 'both'} className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded outline-none focus:border-gold text-zinc-900 dark:text-white transition-colors">
+                      <option value="in-app" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">In-App Only</option>
+                      <option value="email" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Email (Mock)</option>
+                      <option value="both" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Both</option>
                     </select>
                   </div>
                 </div>
@@ -2754,7 +2838,7 @@ export default function AdminDashboard() {
                 <section>
                   <h3 className="text-[10px] uppercase tracking-widest text-white/20 font-bold mb-4">Guest Profile</h3>
                   <div className="p-4 bg-gold/5 border border-gold/10 rounded-xl">
-                    <p className="text-xs font-serif italic text-white mb-1">Guest ID: {selectedOrder.customerId}</p>
+                    <p className="text-xs font-serif italic text-zinc-900 dark:text-white mb-1">Guest ID: {selectedOrder.customerId}</p>
                     <p className="text-[9px] uppercase tracking-widest text-gold font-bold">Fulfillment: {selectedOrder.type}</p>
                   </div>
                 </section>
@@ -2788,10 +2872,10 @@ export default function AdminDashboard() {
                   <select 
                     value={selectedOrder.status}
                     onChange={(e) => updateOrderStatus(selectedOrder.id, e.target.value)}
-                    className="w-full bg-white/5 border border-white/10 p-3 rounded-lg text-[10px] uppercase font-bold tracking-[0.2em] outline-none focus:border-gold text-white transition-colors"
+                    className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded-lg text-[10px] uppercase font-bold tracking-[0.2em] outline-none focus:border-gold text-zinc-900 dark:text-white transition-colors"
                   >
                     {['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'].map(status => (
-                      <option key={status} value={status} className="bg-[#121212]">{status}</option>
+                      <option key={status} value={status} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{status}</option>
                     ))}
                   </select>
                 </div>
@@ -2826,10 +2910,10 @@ export default function AdminDashboard() {
                 </div>
                 <div className="space-y-1 text-left">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Status</label>
-                  <select name="status" defaultValue={editingStaff?.status || 'active'} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white transition-colors">
-                    <option value="active" className="bg-[#121212]">Active</option>
-                    <option value="on-leave" className="bg-[#121212]">On Leave</option>
-                    <option value="inactive" className="bg-[#121212]">Inactive</option>
+                  <select name="status" defaultValue={editingStaff?.status || 'active'} className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded outline-none focus:border-gold text-zinc-900 dark:text-white transition-colors">
+                    <option value="active" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Active</option>
+                    <option value="on-leave" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">On Leave</option>
+                    <option value="inactive" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Inactive</option>
                   </select>
                 </div>
               </div>
@@ -2898,9 +2982,9 @@ export default function AdminDashboard() {
             <form onSubmit={handleSaveShift} className="space-y-6">
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Select Staff Member</label>
-                <select name="staffId" defaultValue={editingShift?.staffId} required className="w-full bg-white/5 border border-white/10 p-3 rounded-lg text-white outline-none focus:border-gold transition-colors">
-                  <option value="" className="bg-[#121212]">Choose member from terminal...</option>
-                  {staff.map(s => <option key={s.id} value={s.id} className="bg-[#121212]">{s.name} ({s.role})</option>)}
+                <select name="staffId" defaultValue={editingShift?.staffId} required className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded-lg text-zinc-900 dark:text-white outline-none focus:border-gold transition-colors">
+                  <option value="" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Choose member from terminal...</option>
+                  {staff.map(s => <option key={s.id} value={s.id} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{s.name} ({s.role})</option>)}
                 </select>
               </div>
               <div className="space-y-1 text-left">

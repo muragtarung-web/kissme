@@ -174,10 +174,10 @@ export default function Reservations() {
                       className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors"
                       onChange={(e) => setFormData({...formData, time: e.target.value})}
                     >
-                      <option className="bg-[#121212]">11:00 AM</option>
-                      <option className="bg-[#121212]">01:00 PM</option>
-                      <option className="bg-[#121212]">06:00 PM</option>
-                      <option className="bg-[#121212]">08:00 PM</option>
+                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">11:00 AM</option>
+                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">01:00 PM</option>
+                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">06:00 PM</option>
+                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">08:00 PM</option>
                     </select>
                   </div>
                 </div>
@@ -206,9 +206,9 @@ export default function Reservations() {
                     value={formData.tableNumber}
                     onChange={(e) => setFormData({...formData, tableNumber: e.target.value})}
                   >
-                    <option value="" disabled className="bg-[#121212]">Select a table</option>
+                    <option value="" disabled className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Select a table</option>
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                      <option key={num} value={num.toString()} className="bg-[#121212]">Table {num}</option>
+                      <option key={num} value={num.toString()} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Table {num}</option>
                     ))}
                   </select>
                   <p className="text-[10px] text-zinc-500 text-left italic">Choose your preferred table number.</p>
