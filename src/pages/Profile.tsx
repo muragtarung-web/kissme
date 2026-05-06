@@ -6,8 +6,9 @@ import { Award, Star, TrendingUp, History, Package } from 'lucide-react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import LoadingScreen from '../components/LoadingScreen';
+import { InAppNotification } from '../types';
 
 export default function Profile() {
   const { user, loading: authLoading } = useAuth();
@@ -15,6 +16,7 @@ export default function Profile() {
   const { showLoading, hideLoading } = useLoading();
   const [orderCount, setOrderCount] = useState(0);
   const [reservationCount, setReservationCount] = useState(0);
+  const [notifications, setNotifications] = useState<InAppNotification[]>([]);
 
   useEffect(() => {
     if (!user) return;
@@ -22,10 +24,18 @@ export default function Profile() {
     // Fetch live stats
     const qOrders = query(collection(db, 'orders'), where('customerId', '==', user.uid));
     const qReservations = query(collection(db, 'reservations'), where('customerId', '==', user.uid));
+    const qNotifications = query(
+      collection(db, 'inAppNotifications'), 
+      where('userId', '==', user.uid),
+      orderBy('createdAt', 'desc')
+    );
     
     const unsubs = [
       onSnapshot(qOrders, (snap) => setOrderCount(snap.size)),
-      onSnapshot(qReservations, (snap) => setReservationCount(snap.size))
+      onSnapshot(qReservations, (snap) => setReservationCount(snap.size)),
+      onSnapshot(qNotifications, (snap) => {
+        setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification)));
+      })
     ];
     
     return () => unsubs.forEach(unsub => unsub());
@@ -194,6 +204,54 @@ export default function Profile() {
           <Benefit label="Tier Discount" value="-10%" desc="Applied automatically to all dine-in selections." />
           <Benefit label="Event Access" value="Priority" desc="Early bird terminal locking for live soundscapes." />
           <Benefit label="Birthdays" value="Gift Box" desc="Complimentary degustation entity on your month." />
+        </div>
+      </div>
+
+      {/* Activity Registry / Notifications */}
+      <div className="mt-20 px-2">
+        <div className="flex items-center justify-between mb-10 text-left">
+          <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">Activity Registry</h3>
+          <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{notifications.length} Logs</span>
+        </div>
+
+        <div className="space-y-3">
+          {notifications.length > 0 ? (
+            notifications.map((n) => (
+              <motion.div 
+                key={n.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className={`p-6 rounded-2xl border flex items-start gap-6 transition-all ${
+                  !n.read 
+                    ? 'bg-white/[0.03] border-white/10' 
+                    : 'bg-transparent border-white/5 opacity-60'
+                }`}
+              >
+                <div className={`p-3 rounded-xl ${
+                  n.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 
+                  n.type === 'reservation' ? 'bg-gold/10 text-gold' : 'bg-white/5 text-white/40'
+                }`}>
+                  {n.type === 'order' ? <Package size={20} /> : n.type === 'reservation' ? <History size={20} /> : <Star size={20} />}
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="flex items-center justify-between gap-4 mb-2">
+                    <h4 className="text-sm font-black uppercase tracking-tight text-white">{n.title}</h4>
+                    <span className="text-[8px] font-mono text-white/20 uppercase">
+                      {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : new Date(n.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-white/60 leading-relaxed font-bold uppercase tracking-wide">{n.message}</p>
+                </div>
+                {!n.read && (
+                  <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="p-12 border border-dashed border-white/10 rounded-2xl text-center">
+              <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold italic">Memory core clean. No recent updates found.</p>
+            </div>
+          )}
         </div>
       </div>
 

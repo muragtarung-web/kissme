@@ -167,4 +167,6 @@ export interface InAppNotification {
   read: boolean;
   createdAt: any;
   eventId?: string;
+  type?: 'order' | 'reservation' | 'event' | 'system';
+  referenceId?: string;
 }

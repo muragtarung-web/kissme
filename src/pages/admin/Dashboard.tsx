@@ -196,6 +196,19 @@ export default function AdminDashboard() {
       await updateDoc(doc(db, 'reservations', id), { status });
       toast.success(`Reservation ${status}`, { position: 'bottom-right' });
 
+      // Create in-app notification
+      if (reservation && reservation.customerId) {
+        await addDoc(collection(db, 'inAppNotifications'), {
+          userId: reservation.customerId,
+          title: 'Booking Update',
+          message: `Your reservation at Kiss Me Store for ${reservation.date} ${reservation.time} has been ${status.toUpperCase()}.`,
+          read: false,
+          createdAt: new Date(),
+          type: 'reservation',
+          referenceId: id
+        });
+      }
+
       // Trigger email notification
       if (reservation && reservation.email) {
         try {
@@ -499,6 +512,8 @@ export default function AdminDashboard() {
   const updateOrderStatus = async (id: string, status: string) => {
     try {
       showLoading(`Updating order ${id} status...`);
+      const order = orders.find(o => o.id === id);
+      
       await updateDoc(doc(db, 'orders', id), { 
         status,
         statusHistory: arrayUnion({
@@ -507,6 +522,20 @@ export default function AdminDashboard() {
           note: `System Status Update`
         })
       });
+
+      // Create in-app notification
+      if (order && order.customerId) {
+        await addDoc(collection(db, 'inAppNotifications'), {
+          userId: order.customerId,
+          title: 'Order Tracking Update',
+          message: `Order #${id.slice(-6)} status has been updated to: ${status.toUpperCase()}.`,
+          read: false,
+          createdAt: new Date(),
+          type: 'order',
+          referenceId: id
+        });
+      }
+
       toast.success(`Order set to ${status}`, { position: 'bottom-right' });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `orders/${id}`);
