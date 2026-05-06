@@ -22,11 +22,11 @@ export default function Profile() {
     if (!user) return;
     
     // Fetch live stats
-    const qOrders = query(collection(db, 'orders'), where('customerId', '==', user.uid));
-    const qReservations = query(collection(db, 'reservations'), where('customerId', '==', user.uid));
+    const qOrders = query(collection(db, 'orders'), where('customerId', '==', user.id));
+    const qReservations = query(collection(db, 'reservations'), where('customerId', '==', user.id));
     const qNotifications = query(
       collection(db, 'inAppNotifications'), 
-      where('userId', '==', user.uid),
+      where('userId', '==', user.id),
       orderBy('createdAt', 'desc')
     );
     

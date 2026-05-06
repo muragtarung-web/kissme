@@ -33,7 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
     const q = query(
       collection(db, 'inAppNotifications'),
-      where('userId', '==', user.uid),
+      where('userId', '==', user.id),
       orderBy('createdAt', 'desc'),
       limit(20)
     );
