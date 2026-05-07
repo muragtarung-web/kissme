@@ -13,6 +13,15 @@ import { InAppNotification } from '../types';
 import toast from 'react-hot-toast';
 import CartDrawer from './CartDrawer';
 
+const LogoK = ({ size = 18 }: { size?: number }) => (
+  <div 
+    style={{ width: size, height: size }} 
+    className="bg-[#5D4037] rounded-full flex items-center justify-center border border-white/10 shadow-sm overflow-hidden"
+  >
+    <span className="text-white font-black leading-none select-none" style={{ fontSize: size * 0.6 }}>K</span>
+  </div>
+);
+
 export default function Layout({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   const { language, setLanguage, t } = useLanguage();
@@ -156,10 +165,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
             <button 
               onClick={toggleLanguage}
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors flex items-center gap-2 group"
+              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors flex items-center gap-2 group"
               title="Toggle Language"
             >
-              <Globe size={18} className="text-zinc-600 dark:text-zinc-400 group-hover:text-gold" />
+              <LogoK size={22} />
               <span className="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 group-hover:text-gold">{language}</span>
             </button>
 

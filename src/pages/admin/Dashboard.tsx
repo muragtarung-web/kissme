@@ -17,6 +17,15 @@ import { useLoading } from '../../hooks/useLoading';
 
 type AdminView = 'overview' | 'menu' | 'events' | 'orders' | 'pos' | 'moments' | 'site' | 'reminders' | 'financials' | 'staff' | 'reservations' | 'table-map' | 'audit';
 
+const LogoK = ({ size = 14 }: { size?: number }) => (
+  <div 
+    style={{ width: size, height: size }} 
+    className="bg-[#5D4037] rounded-full flex items-center justify-center border border-white/10 shadow-sm overflow-hidden"
+  >
+    <span className="text-white font-black leading-none select-none" style={{ fontSize: size * 0.6 }}>K</span>
+  </div>
+);
+
 export default function AdminDashboard() {
   const { showLoading, hideLoading } = useLoading();
   const [view, setView] = useState<AdminView>('overview');
@@ -1070,7 +1079,7 @@ export default function AdminDashboard() {
             onClick={() => setView('pos')}
           />
           <AdminNavItem 
-            icon={<Globe size={14} />} 
+            icon={<LogoK size={14} />} 
             label="Site Settings" 
             active={view === 'site'} 
             onClick={() => setView('site')}

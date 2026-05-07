@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, Users, Clock, MapPin, CheckCircle } from 'luc
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { db, auth } from '../lib/firebase';
-import { collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, onSnapshot, limit } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { useLoading } from '../hooks/useLoading';
 
