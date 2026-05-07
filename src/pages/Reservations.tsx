@@ -11,7 +11,7 @@ export default function Reservations() {
   const { showLoading, hideLoading } = useLoading();
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    date: '',
+    date: new Date().toISOString().split('T')[0],
     time: '11:00 AM',
     guests: '2',
     type: 'indoor',
@@ -28,29 +28,61 @@ export default function Reservations() {
     if (!formData.date || !formData.time) return;
     
     setFetchingTables(true);
-    // Use onSnapshot for real-time availability updates
-    const q = query(
-      collection(db, 'reservations'),
-      where('date', '==', formData.date)
-    );
+    // Fetch all for today's view or more to avoid string format issues in query
+    const q = collection(db, 'reservations');
     
     const unsubscribe = onSnapshot(q, (snap) => {
+      const selectedDate = formData.date;
+      const normalizeTime = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
+      const selectedTime = normalizeTime(formData.time);
+      
+      console.log(`[Availability] Syncing. Total docs: ${snap.docs.length}`);
+      
       const occupied = snap.docs
         .map(doc => {
           const data = doc.data();
+          // Extract digits from tableNumber
+          const rawTableNum = String(data.tableNumber || '').trim();
+          const tableNumMatch = rawTableNum.match(/\d+/);
+          const normalizedTableNum = tableNumMatch ? tableNumMatch[0] : rawTableNum;
+          
+          // Handle both string dates and Firestore Timestamps
+          let dateStr = '';
+          if (data.date) {
+            if (typeof data.date === 'string') {
+              dateStr = data.date;
+            } else if (data.date.toDate) {
+              dateStr = data.date.toDate().toISOString().split('T')[0];
+            } else if (data.date instanceof Date) {
+              dateStr = data.date.toISOString().split('T')[0];
+            }
+          }
+
           return {
-            time: String(data.time || '').trim(),
+            date: dateStr.trim(),
+            time: normalizeTime(String(data.time || '')),
             status: String(data.status || '').toLowerCase().trim(),
-            tableNumber: String(data.tableNumber || '').trim()
+            tableNumber: normalizedTableNum
           };
         })
-        .filter(data => 
-          data.time === formData.time.trim() && 
-          ['pending', 'confirmed', 'booked'].includes(data.status)
-        )
+        .filter(data => {
+          // Normalize dates for comparison (handle 2026-5-7 vs 2026-05-07)
+          const normalizeDate = (d: string) => d.replace(/\//g, '-').split('-').map(p => p.padStart(2, '0')).join('-');
+          const isSameDate = normalizeDate(data.date) === normalizeDate(selectedDate);
+          
+          const isSameTime = data.time === selectedTime;
+          // Broaden active status check: any confirmed, booked or pending status
+          const isActiveStatus = ['pending', 'confirmed', 'booked', 'check-in', 'active'].includes(data.status);
+          
+          if (isSameDate && isSameTime && isActiveStatus) {
+            console.log(`[Availability] MATCH FOUND! Table ${data.tableNumber} is occupied (Date: ${data.date}, Time: ${data.time}, Status: ${data.status})`);
+          }
+          return isSameDate && isSameTime && isActiveStatus;
+        })
         .map(data => data.tableNumber)
         .filter(num => num !== '');
         
+      console.log('[Availability] Occupied Tables for', selectedDate, selectedTime, ':', occupied);
       setOccupiedTables(occupied);
       setFetchingTables(false);
     }, (error) => {
