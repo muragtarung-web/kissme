@@ -3,7 +3,7 @@ import { Calendar as CalendarIcon, Users, Clock, MapPin, CheckCircle } from 'luc
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
 import { db, auth } from '../lib/firebase';
-import { collection, addDoc, query, where, getDocs } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { useLoading } from '../hooks/useLoading';
 
@@ -25,36 +25,41 @@ export default function Reservations() {
   const [fetchingTables, setFetchingTables] = useState(false);
 
   useEffect(() => {
-    const fetchOccupiedTables = async () => {
-      if (!formData.date || !formData.time) return;
-      
-      setFetchingTables(true);
-      try {
-        // Fetch all reservations for that day to avoid complex composite index requirements
-        const q = query(
-          collection(db, 'reservations'),
-          where('date', '==', formData.date)
-        );
+    if (!formData.date || !formData.time) return;
+    
+    setFetchingTables(true);
+    // Use onSnapshot for real-time availability updates
+    const q = query(
+      collection(db, 'reservations'),
+      where('date', '==', formData.date)
+    );
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const occupied = snap.docs
+        .map(doc => {
+          const data = doc.data();
+          return {
+            time: String(data.time || '').trim(),
+            status: String(data.status || '').toLowerCase().trim(),
+            tableNumber: String(data.tableNumber || '').trim()
+          };
+        })
+        .filter(data => 
+          data.time === formData.time.trim() && 
+          ['pending', 'confirmed', 'booked'].includes(data.status)
+        )
+        .map(data => data.tableNumber)
+        .filter(num => num !== '');
         
-        const snap = await getDocs(q);
-        const occupied = snap.docs
-          .map(doc => doc.data())
-          .filter(data => 
-            data.time === formData.time && 
-            ['pending', 'confirmed', 'booked'].includes(data.status)
-          )
-          .map(data => data.tableNumber);
-          
-        setOccupiedTables(occupied);
-      } catch (error) {
-        console.error('Failed to fetch occupied tables:', error);
-        toast.error('Could not verify table availability. Please check your connection.');
-      } finally {
-        setFetchingTables(false);
-      }
-    };
+      setOccupiedTables(occupied);
+      setFetchingTables(false);
+    }, (error) => {
+      console.error('Failed to listen to occupied tables:', error);
+      toast.error('Availability sync failed');
+      setFetchingTables(false);
+    });
 
-    fetchOccupiedTables();
+    return () => unsubscribe();
   }, [formData.date, formData.time]);
 
   const checkAvailability = async () => {
@@ -184,6 +189,7 @@ export default function Reservations() {
                       <input 
                         type="date" 
                         required
+                        value={formData.date}
                         className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none text-zinc-900 dark:text-white transition-colors" 
                         onChange={(e) => setFormData({...formData, date: e.target.value})}
                       />
@@ -192,13 +198,14 @@ export default function Reservations() {
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Time</label>
                     <select 
+                      value={formData.time}
                       className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors"
                       onChange={(e) => setFormData({...formData, time: e.target.value})}
                     >
-                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">11:00 AM</option>
-                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">01:00 PM</option>
-                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">06:00 PM</option>
-                      <option className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">08:00 PM</option>
+                      <option value="11:00 AM" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">11:00 AM</option>
+                      <option value="01:00 PM" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">01:00 PM</option>
+                      <option value="06:00 PM" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">06:00 PM</option>
+                      <option value="08:00 PM" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">08:00 PM</option>
                     </select>
                   </div>
                 </div>
