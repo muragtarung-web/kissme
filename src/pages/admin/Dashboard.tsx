@@ -1642,9 +1642,10 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {products.map(p => (
-                  <div key={p.id} className={`bg-[#121212] border ${p.featured ? 'border-gold shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/5'} rounded-xl p-6 group relative shadow-sm hover:shadow-xl transition-all duration-300`}>
+                  <div key={p.id} className={`bg-[#121212] border ${p.featured ? 'border-gold shadow-[0_0_25px_rgba(212,175,55,0.15)] ring-1 ring-gold/20' : 'border-white/5'} rounded-xl p-6 group relative shadow-sm hover:shadow-xl transition-all duration-500`}>
                     {p.featured && (
-                      <div className="absolute -top-2 -right-2 z-10 bg-gold text-black text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-lg transform rotate-3">
+                      <div className="absolute -top-2 -right-2 z-10 bg-gold text-black text-[9px] font-black uppercase tracking-[0.2em] px-3 py-1.5 rounded-sm shadow-[0_4px_10px_rgba(212,175,55,0.3)] transform rotate-3 flex items-center gap-1">
+                        <span className="w-1 h-1 bg-black rounded-full animate-pulse" />
                         Featured
                       </div>
                     )}
@@ -2554,11 +2555,14 @@ export default function AdminDashboard() {
                   <span className="text-[10px] uppercase tracking-widest font-bold text-white group-hover:text-primary transition-colors">Hot Choice</span>
                 </label>
                 <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
-                <label className="flex items-center gap-3 cursor-pointer group bg-gold/10 hover:bg-gold/20 px-4 py-2 rounded-lg border border-gold/20 transition-all">
-                  <input type="checkbox" name="featured" defaultChecked={editingProduct?.featured} className="accent-gold w-5 h-5" />
+                <label className="flex items-center gap-4 cursor-pointer group bg-gold/10 hover:bg-gold/20 px-5 py-3 rounded-xl border border-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.1)] transition-all transform hover:scale-[1.02] active:scale-[0.98]">
+                  <div className="relative">
+                    <input type="checkbox" name="featured" defaultChecked={editingProduct?.featured} className="accent-gold w-6 h-6 cursor-pointer" />
+                    {editingProduct?.featured && <div className="absolute inset-0 bg-gold blur-md opacity-20 -z-10 animate-pulse" />}
+                  </div>
                   <div className="flex flex-col">
-                    <span className="text-[10px] uppercase tracking-tighter font-extrabold text-gold leading-none">Featured (Home)</span>
-                    <span className="text-[8px] text-white/40 uppercase tracking-widest mt-1 font-bold">Frontpage spotlight</span>
+                    <span className="text-[11px] uppercase tracking-tighter font-black text-gold leading-none">Featured (Home)</span>
+                    <span className="text-[8px] text-white/50 uppercase tracking-widest mt-1.5 font-bold">Priority Frontpage Spotlight</span>
                   </div>
                 </label>
               </div>

@@ -28,15 +28,17 @@ export default function Reservations() {
     if (!formData.date || !formData.time) return;
     
     setFetchingTables(true);
-    // Fetch all for today's view or more to avoid string format issues in query
-    const q = collection(db, 'reservations');
+    // Optimize listener by filtering by date to prevent 'transport errored' on broad collection snapshot
+    const q = query(
+      collection(db, 'reservations'),
+      where('date', '>=', formData.date.split('-').slice(0, 2).join('-')), // Fetch broad enough to catch potential format variances in current month
+      limit(200)
+    );
     
     const unsubscribe = onSnapshot(q, (snap) => {
       const selectedDate = formData.date;
       const normalizeTime = (t: string) => t.toLowerCase().replace(/[^a-z0-9]/g, '');
       const selectedTime = normalizeTime(formData.time);
-      
-      console.log(`[Availability] Syncing. Total docs: ${snap.docs.length}`);
       
       const occupied = snap.docs
         .map(doc => {
@@ -72,22 +74,20 @@ export default function Reservations() {
           
           const isSameTime = data.time === selectedTime;
           // Broaden active status check: any confirmed, booked or pending status
-          const isActiveStatus = ['pending', 'confirmed', 'booked', 'check-in', 'active'].includes(data.status);
+          const isActiveStatus = ['pending', 'confirmed', 'booked', 'check-in', 'active', 'booked'].includes(data.status);
           
           if (isSameDate && isSameTime && isActiveStatus) {
-            console.log(`[Availability] MATCH FOUND! Table ${data.tableNumber} is occupied (Date: ${data.date}, Time: ${data.time}, Status: ${data.status})`);
+            console.log(`[Availability] Table ${data.tableNumber} is occupied!`);
           }
           return isSameDate && isSameTime && isActiveStatus;
         })
         .map(data => data.tableNumber)
         .filter(num => num !== '');
         
-      console.log('[Availability] Occupied Tables for', selectedDate, selectedTime, ':', occupied);
       setOccupiedTables(occupied);
       setFetchingTables(false);
     }, (error) => {
       console.error('Failed to listen to occupied tables:', error);
-      toast.error('Availability sync failed');
       setFetchingTables(false);
     });
 
