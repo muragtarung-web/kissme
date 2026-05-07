@@ -8,7 +8,7 @@ import { useCart } from '../hooks/useCart';
 import { auth, db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
-import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, limit } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, limit, writeBatch } from 'firebase/firestore';
 import { InAppNotification } from '../types';
 import toast from 'react-hot-toast';
 import CartDrawer from './CartDrawer';
@@ -31,6 +31,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [selectedNotification, setSelectedNotification] = useState<InAppNotification | null>(null);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -103,12 +104,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleNotificationClick = (n: InAppNotification) => {
+    setSelectedNotification(n);
+    if (!n.read) {
+      markAsRead(n.id);
+    }
+    setIsNotificationsOpen(false);
+  };
+
   const markAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length === 0) return;
+
     try {
-      const unreadNotifs = notifications.filter(n => !n.read);
-      for (const n of unreadNotifs) {
-        await updateDoc(doc(db, 'inAppNotifications', n.id), { read: true });
-      }
+      const batch = writeBatch(db);
+      unread.forEach(n => {
+        batch.update(doc(db, 'inAppNotifications', n.id), { read: true });
+      });
+      await batch.commit();
       setIsNotificationsOpen(false);
     } catch (error) {
       console.error('Failed to mark all as read:', error);
@@ -222,7 +235,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                               <div 
                                 key={n.id} 
                                 className={`p-4 hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors cursor-pointer relative group ${!n.read ? 'bg-gold/[0.03]' : ''}`}
-                                onClick={() => markAsRead(n.id)}
+                                onClick={() => handleNotificationClick(n)}
                               >
                                 <div className="flex gap-3">
                                   <div className={`mt-1 p-1.5 rounded-lg ${
@@ -365,6 +378,71 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
+
+      <AnimatePresence>
+        {selectedNotification && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNotification(null)}
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-sm bg-[#0D0D0D] border border-white/5 rounded-3xl overflow-hidden shadow-2xl p-8"
+            >
+              <button 
+                onClick={() => setSelectedNotification(null)}
+                className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
+              >
+                <Check size={20} />
+              </button>
+
+              <div className="flex flex-col items-center text-center space-y-6 mt-4">
+                <div className={`p-4 rounded-2xl ${
+                  selectedNotification.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 
+                  selectedNotification.type === 'reservation' ? 'bg-gold/10 text-gold' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-white/40'
+                }`}>
+                  {selectedNotification.type === 'order' ? <ShoppingCart size={32} /> : <Mail size={32} />}
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-serif italic text-white mb-2 uppercase tracking-wide">{selectedNotification.title}</h3>
+                  <p className="text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
+                    {selectedNotification.createdAt?.toDate ? selectedNotification.createdAt.toDate().toLocaleString() : 
+                     (selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleString() : 'Recent')}
+                  </p>
+                </div>
+
+                <div className="w-full h-px bg-white/5" />
+
+                <p className="text-white/60 leading-relaxed text-sm">
+                  {selectedNotification.message}
+                </p>
+
+                {selectedNotification.referenceId && (
+                  <div className="pt-4">
+                    <span className="text-[10px] uppercase font-bold text-gold bg-gold/5 px-4 py-2 rounded-lg border border-gold/10">
+                      Ref: #{selectedNotification.referenceId.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                <button 
+                  onClick={() => setSelectedNotification(null)}
+                  className="w-full bg-gold text-black py-4 rounded-sm text-[10px] uppercase font-bold tracking-widest hover:bg-white transition-colors"
+                >
+                  Confirm Receipt
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <footer className="bg-zinc-950 border-t border-zinc-900 py-12">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 md:grid-cols-4 gap-12">
