@@ -26,15 +26,21 @@ export default function Profile() {
     const qReservations = query(collection(db, 'reservations'), where('customerId', '==', user.id));
     const qNotifications = query(
       collection(db, 'inAppNotifications'), 
-      where('userId', '==', user.id),
-      orderBy('createdAt', 'desc')
+      where('userId', '==', user.id)
     );
     
     const unsubs = [
       onSnapshot(qOrders, (snap) => setOrderCount(snap.size)),
       onSnapshot(qReservations, (snap) => setReservationCount(snap.size)),
       onSnapshot(qNotifications, (snap) => {
-        setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification)));
+        const notifs = snap.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification))
+          .sort((a, b) => {
+            const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+            const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+            return timeB - timeA;
+          });
+        setNotifications(notifs);
       }, (error) => {
         console.error('History Fetch Error:', error);
       })

@@ -30,15 +30,21 @@ export default function Reservations() {
       
       setFetchingTables(true);
       try {
+        // Fetch all reservations for that day to avoid complex composite index requirements
         const q = query(
           collection(db, 'reservations'),
-          where('date', '==', formData.date),
-          where('time', '==', formData.time),
-          where('status', 'in', ['pending', 'confirmed', 'booked'])
+          where('date', '==', formData.date)
         );
         
         const snap = await getDocs(q);
-        const occupied = snap.docs.map(doc => doc.data().tableNumber);
+        const occupied = snap.docs
+          .map(doc => doc.data())
+          .filter(data => 
+            data.time === formData.time && 
+            ['pending', 'confirmed', 'booked'].includes(data.status)
+          )
+          .map(data => data.tableNumber);
+          
         setOccupiedTables(occupied);
       } catch (error) {
         console.error('Failed to fetch occupied tables:', error);

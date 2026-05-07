@@ -35,13 +35,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     const q = query(
       collection(db, 'inAppNotifications'),
       where('userId', '==', user.id),
-      orderBy('createdAt', 'desc'),
-      limit(20)
+      limit(50)
     );
 
     let firstLoad = true;
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      const notifs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification));
+      const notifs = snapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification))
+        .sort((a, b) => {
+          const timeA = a.createdAt?.toDate ? a.createdAt.toDate().getTime() : new Date(a.createdAt || 0).getTime();
+          const timeB = b.createdAt?.toDate ? b.createdAt.toDate().getTime() : new Date(b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
       
       // If there are new unread notifications that were just added (after first load)
       if (!firstLoad) {
