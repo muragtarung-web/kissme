@@ -1642,7 +1642,12 @@ export default function AdminDashboard() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {products.map(p => (
-                  <div key={p.id} className="bg-[#121212] border border-white/5 rounded-xl p-6 group relative shadow-sm hover:shadow-xl transition-all duration-300">
+                  <div key={p.id} className={`bg-[#121212] border ${p.featured ? 'border-gold shadow-[0_0_15px_rgba(212,175,55,0.1)]' : 'border-white/5'} rounded-xl p-6 group relative shadow-sm hover:shadow-xl transition-all duration-300`}>
+                    {p.featured && (
+                      <div className="absolute -top-2 -right-2 z-10 bg-gold text-black text-[9px] font-bold uppercase tracking-widest px-2 py-1 rounded shadow-lg transform rotate-3">
+                        Featured
+                      </div>
+                    )}
                     <div className="aspect-video rounded-lg overflow-hidden mb-4 opacity-60 group-hover:opacity-100 transition-opacity">
                       <img 
                         src={p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'} 
@@ -2535,22 +2540,26 @@ export default function AdminDashboard() {
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Description</label>
                 <textarea name="description" defaultValue={editingProduct?.description} rows={3} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
               </div>
-              <div className="flex gap-8">
-                <label className="flex items-center gap-2 cursor-pointer">
+              <div className="flex flex-wrap gap-6 p-4 bg-white/5 rounded-xl border border-white/5">
+                <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" name="available" defaultChecked={editingProduct?.available ?? true} className="accent-gold w-4 h-4" />
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-white">Available</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-white group-hover:text-gold transition-colors">Available</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" name="trackInventory" defaultChecked={editingProduct?.trackInventory} className="accent-gold w-4 h-4" />
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-white">Track Stock</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-white group-hover:text-gold transition-colors">Track Stock</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer group">
                   <input type="checkbox" name="bestSeller" defaultChecked={editingProduct?.bestSeller} className="accent-primary w-4 h-4" />
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-white">Hot Choice</span>
+                  <span className="text-[10px] uppercase tracking-widest font-bold text-white group-hover:text-primary transition-colors">Hot Choice</span>
                 </label>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" name="featured" defaultChecked={editingProduct?.featured} className="accent-gold w-4 h-4" />
-                  <span className="text-[10px] uppercase tracking-widest font-bold text-white">Featured (Home)</span>
+                <div className="w-px h-6 bg-white/10 hidden sm:block"></div>
+                <label className="flex items-center gap-3 cursor-pointer group bg-gold/10 hover:bg-gold/20 px-4 py-2 rounded-lg border border-gold/20 transition-all">
+                  <input type="checkbox" name="featured" defaultChecked={editingProduct?.featured} className="accent-gold w-5 h-5" />
+                  <div className="flex flex-col">
+                    <span className="text-[10px] uppercase tracking-tighter font-extrabold text-gold leading-none">Featured (Home)</span>
+                    <span className="text-[8px] text-white/40 uppercase tracking-widest mt-1 font-bold">Frontpage spotlight</span>
+                  </div>
                 </label>
               </div>
 
