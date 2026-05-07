@@ -16,22 +16,29 @@ export default function LoadingScreen({ message = "Kiss me Store is preparing yo
         transition={{ duration: 0.5 }}
         className="relative flex flex-col items-center justify-center w-full px-8"
       >
-        {/* Baymax-like Animation / Placeholder */}
-        <div className="relative w-40 h-40 md:w-48 md:h-48 mb-8">
-          <motion.img 
-            src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNHJ4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4ZzV4JmVwPXYxX2ludGVybmFsX2dpZl9ieV9pZCZjdD1n/vskS7PZJ1pYI0/giphy.gif"
-            alt="Baymax Running"
-            className="w-full h-full object-contain mx-auto"
+        {/* Logo Animation */}
+        <div className="relative w-40 h-40 md:w-48 md:h-48 mb-8 flex items-center justify-center">
+          <motion.div
+            className="w-24 h-24 bg-[#5D4037] rounded-full flex items-center justify-center border-4 border-gold shadow-[0_0_30px_rgba(212,175,55,0.3)]"
             animate={{ 
-              x: [-5, 5, -5],
-              y: [0, -3, 0]
+              scale: [1, 1.1, 1],
+              rotate: [0, 5, -5, 0]
             }}
             transition={{ 
               repeat: Infinity, 
-              duration: 1.5,
+              duration: 3,
               ease: "easeInOut"
             }}
+          >
+            <span className="text-white text-6xl font-black select-none">K</span>
+          </motion.div>
+          
+          <motion.div
+            className="absolute inset-0 border-2 border-gold/20 rounded-full"
+            animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+            transition={{ repeat: Infinity, duration: 2 }}
           />
+
           {/* Floating Food Icons */}
           <motion.div 
             className="absolute -top-4 -right-4 text-3xl"
