@@ -71,6 +71,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       setNotifications(notifs);
       setUnreadCount(notifs.filter(n => !n.read).length);
       firstLoad = false;
+    }, (error) => {
+      console.error('Notification channel error:', error);
+      if (error.message.includes('The query requires an index')) {
+        console.warn('CRITICAL: Composite index missing for inAppNotifications. Check Firebase console.');
+      }
     });
 
     return () => unsubscribe();
@@ -220,7 +225,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                                       {n.message}
                                     </p>
                                     <p className="text-[8px] text-zinc-400 dark:text-zinc-600 mt-2 font-mono uppercase">
-                                      {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : new Date(n.createdAt).toLocaleString()}
+                                      {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : 
+                                       (n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Recent')}
                                     </p>
                                   </div>
                                   {!n.read && (

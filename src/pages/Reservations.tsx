@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Users, Clock, MapPin, CheckCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import toast from 'react-hot-toast';
@@ -21,24 +21,39 @@ export default function Reservations() {
     phone: ''
   });
 
+  const [occupiedTables, setOccupiedTables] = useState<string[]>([]);
+  const [fetchingTables, setFetchingTables] = useState(false);
+
+  useEffect(() => {
+    const fetchOccupiedTables = async () => {
+      if (!formData.date || !formData.time) return;
+      
+      setFetchingTables(true);
+      try {
+        const q = query(
+          collection(db, 'reservations'),
+          where('date', '==', formData.date),
+          where('time', '==', formData.time),
+          where('status', 'in', ['pending', 'confirmed', 'booked'])
+        );
+        
+        const snap = await getDocs(q);
+        const occupied = snap.docs.map(doc => doc.data().tableNumber);
+        setOccupiedTables(occupied);
+      } catch (error) {
+        console.error('Failed to fetch occupied tables:', error);
+        toast.error('Could not verify table availability. Please check your connection.');
+      } finally {
+        setFetchingTables(false);
+      }
+    };
+
+    fetchOccupiedTables();
+  }, [formData.date, formData.time]);
+
   const checkAvailability = async () => {
     if (!formData.date || !formData.time || !formData.tableNumber) return true;
-    
-    try {
-      const q = query(
-        collection(db, 'reservations'),
-        where('date', '==', formData.date),
-        where('time', '==', formData.time),
-        where('tableNumber', '==', formData.tableNumber),
-        where('status', 'in', ['pending', 'confirmed', 'booked'])
-      );
-      
-      const snap = await getDocs(q);
-      return snap.empty;
-    } catch (error) {
-      console.error('Availability check failed:', error);
-      return true;
-    }
+    return !occupiedTables.includes(formData.tableNumber);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -199,19 +214,36 @@ export default function Reservations() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Table Number</label>
+                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">
+                    Table Number {fetchingTables && <span className="animate-pulse text-gold"> (Checking...)</span>}
+                  </label>
                   <select 
                     required
-                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors"
+                    disabled={fetchingTables}
+                    className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors disabled:opacity-50"
                     value={formData.tableNumber}
                     onChange={(e) => setFormData({...formData, tableNumber: e.target.value})}
                   >
-                    <option value="" disabled className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Select a table</option>
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => (
-                      <option key={num} value={num.toString()} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Table {num}</option>
-                    ))}
+                    <option value="" disabled className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">
+                      {fetchingTables ? 'Updating availability...' : 'Select a table'}
+                    </option>
+                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(num => {
+                      const isOccupied = occupiedTables.includes(num.toString());
+                      return (
+                        <option 
+                          key={num} 
+                          value={num.toString()} 
+                          disabled={isOccupied}
+                          className={`bg-white dark:bg-[#121212] ${isOccupied ? 'text-red-500 line-through' : 'text-zinc-900 dark:text-white'}`}
+                        >
+                          {isOccupied ? `Table ${num} — ALREADY RESERVED` : `Table ${num} Available`}
+                        </option>
+                      );
+                    })}
                   </select>
-                  <p className="text-[10px] text-zinc-500 text-left italic">Choose your preferred table number.</p>
+                  <p className="text-[10px] text-zinc-500 text-left italic">
+                    {fetchingTables ? 'Securing live table data...' : 'Choose your preferred table number for this time slot.'}
+                  </p>
                 </div>
 
                 <div className="space-y-2">

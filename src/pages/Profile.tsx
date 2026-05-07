@@ -35,6 +35,8 @@ export default function Profile() {
       onSnapshot(qReservations, (snap) => setReservationCount(snap.size)),
       onSnapshot(qNotifications, (snap) => {
         setNotifications(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as InAppNotification)));
+      }, (error) => {
+        console.error('History Fetch Error:', error);
       })
     ];
     
@@ -237,7 +239,8 @@ export default function Profile() {
                   <div className="flex items-center justify-between gap-4 mb-2">
                     <h4 className="text-sm font-black uppercase tracking-tight text-zinc-900 dark:text-white">{n.title}</h4>
                     <span className="text-[8px] font-mono text-zinc-400 dark:text-white/20 uppercase">
-                      {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : new Date(n.createdAt).toLocaleString()}
+                      {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : 
+                       (n.createdAt ? new Date(n.createdAt).toLocaleString() : 'Recent')}
                     </span>
                   </div>
                   <p className="text-[11px] text-zinc-600 dark:text-white/60 leading-relaxed font-bold uppercase tracking-wide">{n.message}</p>
