@@ -103,6 +103,7 @@ export interface Shift {
   timeOut?: string;
   earnedAmount?: number;
   overtimePay?: number;
+  overtimeHours?: number;
   deductions?: number;
   status: 'scheduled' | 'active' | 'completed' | 'absent' | 'late';
 }

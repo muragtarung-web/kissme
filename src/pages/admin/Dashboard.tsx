@@ -901,9 +901,8 @@ export default function AdminDashboard() {
       }
 
       const standardHours = staffMember.standardHours || 8;
-      const overtimeHours = Math.max(0, workedHours - standardHours);
+      const overtimeHours = staffMember.allowOvertime ? Math.max(0, workedHours - standardHours) : 0;
       
-      // Only pay OT if allowed by admin
       const overtimePay = staffMember.allowOvertime 
         ? Math.round(overtimeHours * (staffMember.overtimeRatePerHour || 0))
         : 0;
@@ -915,10 +914,14 @@ export default function AdminDashboard() {
         timeOut: now.toISOString(),
         earnedAmount: finalEarned,
         overtimePay: overtimePay,
+        overtimeHours: Number(overtimeHours.toFixed(2)),
         deductions: deductions,
         status: 'completed'
       });
 
+      if (overtimePay > 0) {
+        toast.success(`Overtime Pay: ₱${overtimePay} (${overtimeHours.toFixed(1)} hrs)`);
+      }
       toast.success(`${shift.staffName} duty completed. Total Pay: ₱${finalEarned}`);
     } catch (error) {
       toast.error('Clock out failed');
@@ -1402,7 +1405,10 @@ export default function AdminDashboard() {
                             {shift.overtimePay !== undefined && shift.overtimePay > 0 && (
                               <div className="text-left">
                                 <p className="text-[8px] uppercase tracking-widest text-blue-500 font-bold">Overtime</p>
-                                <p className="text-[10px] text-blue-400 font-bold">+₱{shift.overtimePay}</p>
+                                <p className="text-[10px] text-blue-400 font-bold">
+                                  +₱{shift.overtimePay} 
+                                  {shift.overtimeHours && <span className="text-[8px] ml-1 opacity-60">({shift.overtimeHours}h)</span>}
+                                </p>
                               </div>
                             )}
                             {shift.deductions !== undefined && shift.deductions > 0 && (
@@ -3081,7 +3087,9 @@ export default function AdminDashboard() {
                 <span>₱{(selectedShiftForSlip.earnedAmount || 0) + (selectedShiftForSlip.deductions || 0) - (selectedShiftForSlip.overtimePay || 0)}</span>
               </div>
               <div className="flex justify-between text-blue-600">
-                <span className="text-[10px] uppercase font-bold">Overtime Pay (+)</span>
+                <span className="text-[10px] uppercase font-bold">
+                  Overtime Pay {selectedShiftForSlip.overtimeHours ? `(${selectedShiftForSlip.overtimeHours} hrs)` : ''} (+)
+                </span>
                 <span>₱{selectedShiftForSlip.overtimePay || 0}</span>
               </div>
               <div className="flex justify-between text-red-600">

@@ -6,9 +6,11 @@ import { Award, Star, TrendingUp, History, Package } from 'lucide-react';
 import { Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { db } from '../lib/firebase';
-import { collection, query, where, onSnapshot, orderBy } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, updateDoc, doc, writeBatch } from 'firebase/firestore';
 import LoadingScreen from '../components/LoadingScreen';
 import { InAppNotification } from '../types';
+import toast from 'react-hot-toast';
+import { X, Bell, CheckCheck } from 'lucide-react';
 
 export default function Profile() {
   const { user, loading: authLoading } = useAuth();
@@ -17,6 +19,46 @@ export default function Profile() {
   const [orderCount, setOrderCount] = useState(0);
   const [reservationCount, setReservationCount] = useState(0);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
+  const [selectedNotification, setSelectedNotification] = useState<InAppNotification | null>(null);
+
+  const markAsRead = async (notification: InAppNotification) => {
+    if (notification.read) return;
+    try {
+      await updateDoc(doc(db, 'inAppNotifications', notification.id), { read: true });
+    } catch (error) {
+      console.error('Failed to mark as read:', error);
+    }
+  };
+
+  const markAllAsRead = async () => {
+    const unread = notifications.filter(n => !n.read);
+    if (unread.length === 0) {
+      toast.success('No unread notifications');
+      return;
+    }
+
+    try {
+      showLoading('Marking all as read...');
+      const batch = writeBatch(db);
+      unread.forEach(n => {
+        batch.update(doc(db, 'inAppNotifications', n.id), { read: true });
+      });
+      await batch.commit();
+      toast.success('All notifications marked as read');
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+      toast.error('Failed to update notifications');
+    } finally {
+      hideLoading();
+    }
+  };
+
+  const handleNotificationClick = (n: InAppNotification) => {
+    setSelectedNotification(n);
+    if (!n.read) {
+      markAsRead(n);
+    }
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -219,7 +261,16 @@ export default function Profile() {
       <div className="mt-20 px-2">
         <div className="flex items-center justify-between mb-10 text-left">
           <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 dark:text-white/40 font-bold">Activity Registry</h3>
-          <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{notifications.length} Logs</span>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={markAllAsRead}
+              className="text-[9px] uppercase tracking-widest text-white/40 hover:text-gold font-bold flex items-center gap-2 transition-colors border border-white/5 px-3 py-1 rounded"
+              title="Mark all as read"
+            >
+              <CheckCheck size={12} /> Mark All
+            </button>
+            <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{notifications.length} Logs</span>
+          </div>
         </div>
 
         <div className="space-y-3">
@@ -229,7 +280,8 @@ export default function Profile() {
                 key={n.id}
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className={`p-6 rounded-2xl border flex items-start gap-6 transition-all ${
+                onClick={() => handleNotificationClick(n)}
+                className={`p-6 rounded-2xl border flex items-start gap-6 transition-all cursor-pointer group ${
                   !n.read 
                     ? 'bg-zinc-50 dark:bg-white/[0.03] border-zinc-200 dark:border-white/10' 
                     : 'bg-transparent border-zinc-100 dark:border-white/5 opacity-60'
@@ -264,7 +316,6 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* Promotions & Vouchers */}
       <div className="mt-20 px-2">
         <div className="flex items-center justify-between mb-10 text-left">
           <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 dark:text-white/40 font-bold">Vouchers & Offers</h3>
@@ -315,6 +366,71 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedNotification && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedNotification(null)}
+              className="absolute inset-0 bg-black/90 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-zinc-900 border border-white/5 rounded-3xl overflow-hidden shadow-2xl p-8"
+            >
+              <button 
+                onClick={() => setSelectedNotification(null)}
+                className="absolute top-6 right-6 text-white/20 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+
+              <div className="flex flex-col items-center text-center space-y-6 mt-4">
+                <div className={`p-4 rounded-2xl ${
+                  selectedNotification.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 
+                  selectedNotification.type === 'reservation' ? 'bg-gold/10 text-gold' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-white/40'
+                }`}>
+                  {selectedNotification.type === 'order' ? <Package size={32} /> : selectedNotification.type === 'reservation' ? <History size={32} /> : <Star size={32} />}
+                </div>
+
+                <div>
+                  <h3 className="text-xl font-serif italic text-white mb-2 uppercase tracking-wide">{selectedNotification.title}</h3>
+                  <p className="text-[10px] text-white/20 font-mono uppercase tracking-[0.2em]">
+                    {selectedNotification.createdAt?.toDate ? selectedNotification.createdAt.toDate().toLocaleString() : 
+                     (selectedNotification.createdAt ? new Date(selectedNotification.createdAt).toLocaleString() : 'Recent')}
+                  </p>
+                </div>
+
+                <div className="w-full h-px bg-white/5" />
+
+                <p className="text-white/60 leading-relaxed text-sm">
+                  {selectedNotification.message}
+                </p>
+
+                {selectedNotification.referenceId && (
+                  <div className="pt-4">
+                    <span className="text-[10px] uppercase font-bold text-gold bg-gold/5 px-4 py-2 rounded-lg border border-gold/10">
+                      Ref: #{selectedNotification.referenceId.slice(-8).toUpperCase()}
+                    </span>
+                  </div>
+                )}
+
+                <button 
+                  onClick={() => setSelectedNotification(null)}
+                  className="w-full btn-gold mt-6"
+                >
+                  Close
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
