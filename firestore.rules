@@ -92,7 +92,11 @@ service cloud.firestore {
     function isValidNotification(data) {
       return data.userId is string &&
              data.title is string &&
-             data.read is bool;
+             data.read is bool &&
+             (data.get('message', null) == null || data.message is string) &&
+             (data.get('type', null) == null || data.type in ['order', 'reservation', 'event', 'system']) &&
+             (data.get('referenceId', null) == null || data.referenceId is string) &&
+             (data.get('createdAt', null) == null || data.createdAt is timestamp || data.createdAt is string);
     }
 
     function isValidStaff(data) {
@@ -173,10 +177,10 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
-    match /notifications/{notificationId} {
+    match /inAppNotifications/{notificationId} {
       allow get: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
       allow list: if isSignedIn() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAdmin();
+      allow create: if isSignedIn() && (incoming().userId == request.auth.uid || isAdmin()) && isValidNotification(incoming());
       allow update: if isSignedIn() && resource.data.userId == request.auth.uid && 
                    incoming().diff(existing()).affectedKeys().hasOnly(['read']);
       allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;

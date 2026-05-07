@@ -199,7 +199,7 @@ export default function Profile() {
 
       {/* Benefits Section */}
       <div className="mt-20">
-        <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold mb-10 px-2 text-left">Your Exclusive Privileges</h3>
+        <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 dark:text-white/40 font-bold mb-10 px-2 text-left">Your Exclusive Privileges</h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <Benefit label="Tier Discount" value="-10%" desc="Applied automatically to all dine-in selections." />
           <Benefit label="Event Access" value="Priority" desc="Early bird terminal locking for live soundscapes." />
@@ -210,7 +210,7 @@ export default function Profile() {
       {/* Activity Registry / Notifications */}
       <div className="mt-20 px-2">
         <div className="flex items-center justify-between mb-10 text-left">
-          <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">Activity Registry</h3>
+          <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 dark:text-white/40 font-bold">Activity Registry</h3>
           <span className="text-[10px] uppercase tracking-widest text-gold font-bold">{notifications.length} Logs</span>
         </div>
 
@@ -223,24 +223,24 @@ export default function Profile() {
                 animate={{ opacity: 1, x: 0 }}
                 className={`p-6 rounded-2xl border flex items-start gap-6 transition-all ${
                   !n.read 
-                    ? 'bg-white/[0.03] border-white/10' 
-                    : 'bg-transparent border-white/5 opacity-60'
+                    ? 'bg-zinc-50 dark:bg-white/[0.03] border-zinc-200 dark:border-white/10' 
+                    : 'bg-transparent border-zinc-100 dark:border-white/5 opacity-60'
                 }`}
               >
                 <div className={`p-3 rounded-xl ${
                   n.type === 'order' ? 'bg-blue-500/10 text-blue-500' : 
-                  n.type === 'reservation' ? 'bg-gold/10 text-gold' : 'bg-white/5 text-white/40'
+                  n.type === 'reservation' ? 'bg-gold/10 text-gold' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-white/40'
                 }`}>
                   {n.type === 'order' ? <Package size={20} /> : n.type === 'reservation' ? <History size={20} /> : <Star size={20} />}
                 </div>
                 <div className="flex-1 text-left">
                   <div className="flex items-center justify-between gap-4 mb-2">
-                    <h4 className="text-sm font-black uppercase tracking-tight text-white">{n.title}</h4>
-                    <span className="text-[8px] font-mono text-white/20 uppercase">
+                    <h4 className="text-sm font-black uppercase tracking-tight text-zinc-900 dark:text-white">{n.title}</h4>
+                    <span className="text-[8px] font-mono text-zinc-400 dark:text-white/20 uppercase">
                       {n.createdAt?.toDate ? n.createdAt.toDate().toLocaleString() : new Date(n.createdAt).toLocaleString()}
                     </span>
                   </div>
-                  <p className="text-[11px] text-white/60 leading-relaxed font-bold uppercase tracking-wide">{n.message}</p>
+                  <p className="text-[11px] text-zinc-600 dark:text-white/60 leading-relaxed font-bold uppercase tracking-wide">{n.message}</p>
                 </div>
                 {!n.read && (
                   <div className="w-2 h-2 rounded-full bg-gold shadow-[0_0_10px_rgba(255,215,0,0.5)]" />
@@ -248,8 +248,8 @@ export default function Profile() {
               </motion.div>
             ))
           ) : (
-            <div className="p-12 border border-dashed border-white/10 rounded-2xl text-center">
-              <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold italic">Memory core clean. No recent updates found.</p>
+            <div className="p-12 border border-dashed border-zinc-200 dark:border-white/10 rounded-2xl text-center">
+              <p className="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-white/20 font-bold italic">Memory core clean. No recent updates found.</p>
             </div>
           )}
         </div>
@@ -258,7 +258,7 @@ export default function Profile() {
       {/* Promotions & Vouchers */}
       <div className="mt-20 px-2">
         <div className="flex items-center justify-between mb-10 text-left">
-          <h3 className="text-[10px] uppercase tracking-[0.4em] text-white/40 font-bold">Vouchers & Offers</h3>
+          <h3 className="text-[10px] uppercase tracking-[0.4em] text-zinc-500 dark:text-white/40 font-bold">Vouchers & Offers</h3>
           <span className="text-[10px] uppercase tracking-widest text-gold font-bold">4 Available</span>
         </div>
         
@@ -268,13 +268,13 @@ export default function Profile() {
             className="p-6 bg-gradient-to-r from-gold/5 via-gold/10 to-transparent border border-gold/20 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 group cursor-pointer"
           >
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-gold flex flex-col items-center justify-center text-black rounded-xl">
+              <div className="w-16 h-16 bg-gold flex flex-col items-center justify-center text-black rounded-xl shadow-lg">
                  <span className="text-xl font-bold leading-none">20%</span>
                  <span className="text-[8px] font-bold uppercase tracking-tighter">OFF</span>
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-bold uppercase tracking-tight text-white mb-1">Loyalty Perk: Weekend Brunch</h4>
-                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Valid for groups of 4 or more. Expires in 3 days.</p>
+                <h4 className="text-lg font-bold uppercase tracking-tight text-zinc-900 dark:text-white mb-1">Loyalty Perk: Weekend Brunch</h4>
+                <p className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-white/40 font-bold">Valid for groups of 4 or more. Expires in 3 days.</p>
               </div>
             </div>
             <button className="text-[10px] font-bold uppercase tracking-widest text-gold border border-gold px-6 py-2 group-hover:bg-gold group-hover:text-black transition-all">
@@ -284,25 +284,25 @@ export default function Profile() {
 
           <motion.div 
             whileHover={{ scale: 1.01 }}
-            className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 group cursor-pointer"
+            className="p-6 bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6 group cursor-pointer"
           >
             <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-white/10 flex flex-col items-center justify-center text-white/60 rounded-xl">
+              <div className="w-16 h-16 bg-zinc-200 dark:bg-white/10 flex flex-col items-center justify-center text-zinc-500 dark:text-white/60 rounded-xl">
                  <span className="text-xl font-bold leading-none">FREE</span>
                  <span className="text-[8px] font-bold uppercase tracking-tighter">DRINK</span>
               </div>
               <div className="text-left">
-                <h4 className="text-lg font-bold uppercase tracking-tight text-white mb-1">New Member Bonus</h4>
-                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Complimentary signature mocktail on your next visit.</p>
+                <h4 className="text-lg font-bold uppercase tracking-tight text-zinc-900 dark:text-white mb-1">New Member Bonus</h4>
+                <p className="text-[10px] uppercase tracking-widest text-zinc-500 dark:text-white/40 font-bold">Complimentary signature mocktail on your next visit.</p>
               </div>
             </div>
-            <button className="text-[10px] font-bold uppercase tracking-widest text-white/40 border border-white/10 px-6 py-2 group-hover:bg-white group-hover:text-black transition-all">
+            <button className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 dark:text-white/40 border border-zinc-200 dark:border-white/10 px-6 py-2 group-hover:bg-zinc-900 dark:group-hover:bg-white group-hover:text-white dark:group-hover:text-black transition-all">
               Applied
             </button>
           </motion.div>
 
-          <div className="p-8 border border-dashed border-white/10 rounded-2xl text-center">
-            <p className="text-[10px] uppercase tracking-widest text-white/20 font-bold">More offers unlocked at Silver Tier</p>
+          <div className="p-8 border border-dashed border-zinc-200 dark:border-white/10 rounded-2xl text-center">
+            <p className="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-white/20 font-bold">More offers unlocked at Silver Tier</p>
           </div>
         </div>
       </div>
@@ -312,20 +312,20 @@ export default function Profile() {
 
 function StatBox({ icon, label, value }: any) {
   return (
-    <div className="p-8 bg-white/5 border border-white/10 rounded-2xl transition-colors text-left">
+    <div className="p-8 bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl transition-colors text-left">
       <div className="text-gold mb-4">{icon}</div>
-      <p className="text-[10px] uppercase tracking-widest font-bold text-white/40 mb-1">{label}</p>
-      <p className="text-2xl font-serif font-bold text-white">{value}</p>
+      <p className="text-[10px] uppercase tracking-widest font-bold text-zinc-500 dark:text-white/40 mb-1">{label}</p>
+      <p className="text-2xl font-serif font-bold text-zinc-900 dark:text-white">{value}</p>
     </div>
   );
 }
 
 function Benefit({ label, value, desc }: any) {
   return (
-    <div className="p-8 bg-black/40 border border-white/5 rounded-2xl group hover:border-gold/30 transition-all text-left">
+    <div className="p-8 bg-white dark:bg-black/40 border border-zinc-200 dark:border-white/5 rounded-2xl group hover:border-gold/30 transition-all text-left shadow-sm">
       <p className="text-gold text-[10px] font-bold uppercase tracking-widest mb-1">{label}</p>
-      <p className="text-3xl font-serif italic mb-4 text-white">{value}</p>
-      <p className="text-[10px] text-white/20 uppercase tracking-widest font-bold leading-relaxed">{desc}</p>
+      <p className="text-3xl font-serif italic mb-4 text-zinc-900 dark:text-white">{value}</p>
+      <p className="text-[10px] text-zinc-400 dark:text-white/20 uppercase tracking-widest font-bold leading-relaxed">{desc}</p>
     </div>
   );
 }
@@ -351,9 +351,9 @@ function AdminPortalCard({ icon, title, desc, link, color }: any) {
 
 function MaintenanceBox({ label, value }: any) {
   return (
-    <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl text-left">
-       <p className="text-[9px] uppercase tracking-widest font-bold text-white/20 mb-2">{label}</p>
-       <p className="text-xl font-mono text-white">{value}</p>
+    <div className="p-6 bg-zinc-50 dark:bg-white/[0.02] border border-zinc-200 dark:border-white/5 rounded-2xl text-left">
+       <p className="text-[9px] uppercase tracking-widest font-bold text-zinc-500 dark:text-white/20 mb-2">{label}</p>
+       <p className="text-xl font-mono text-zinc-900 dark:text-white">{value}</p>
     </div>
   );
 }
