@@ -114,9 +114,18 @@ export interface SiteSettings {
   heroTitle: string;
   heroSubtitle: string;
   heroImage: string;
+  heroTagline?: string;
   aboutTitle: string;
   aboutText: string;
   aboutImage: string;
+  featuresTitle?: string;
+  delicaciesTitle?: string;
+  eventsTitle?: string;
+  momentsTitle?: string;
+  membershipTitle?: string;
+  visitTitle?: string;
+  ctaTitle?: string;
+  ctaDescription?: string;
   features: {
     title: string;
     description: string;

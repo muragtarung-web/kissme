@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import React from 'react';
 import { db, auth } from '../../lib/firebase';
 import { collection, query, getDocs, limit, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, arrayUnion, writeBatch } from 'firebase/firestore';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   TrendingUp, Users, ShoppingCart, AlertCircle, 
   BarChart3, Settings, Package, Calendar, 
@@ -77,6 +77,7 @@ export default function AdminDashboard() {
   const [showShiftModal, setShowShiftModal] = useState(false);
   const [editingShift, setEditingShift] = useState<Shift | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   useEffect(() => {
     const unsubs = [
@@ -733,6 +734,15 @@ export default function AdminDashboard() {
       heroTitle: formData.get('heroTitle') as string,
       heroSubtitle: formData.get('heroSubtitle') as string,
       heroImage: heroImage || formData.get('heroImage') as string,
+      heroTagline: formData.get('heroTagline') as string,
+      featuresTitle: formData.get('featuresTitle') as string,
+      delicaciesTitle: formData.get('delicaciesTitle') as string,
+      eventsTitle: formData.get('eventsTitle') as string,
+      momentsTitle: formData.get('momentsTitle') as string,
+      membershipTitle: formData.get('membershipTitle') as string,
+      visitTitle: formData.get('visitTitle') as string,
+      ctaTitle: formData.get('ctaTitle') as string,
+      ctaDescription: formData.get('ctaDescription') as string,
       features: [
         { title: formData.get('feature_0_title') as string, description: formData.get('feature_0_desc') as string, icon: 'Utensils' },
         { title: formData.get('feature_1_title') as string, description: formData.get('feature_1_desc') as string, icon: 'Music' },
@@ -2329,18 +2339,60 @@ export default function AdminDashboard() {
                       <input name="heroTitle" defaultValue={siteSettings?.heroTitle} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Hero Accent Text</label>
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Hero Accent (e.g. Divine Aesthetics)</label>
                       <input name="heroSubtitle" defaultValue={siteSettings?.heroSubtitle} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
                     </div>
                     <div className="space-y-1">
                       <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Hero Cinematic URL</label>
                       <input name="heroImage" defaultValue={siteSettings?.heroImage} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
                     </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Hero Tagline</label>
+                      <input name="heroTagline" defaultValue={siteSettings?.heroTagline} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                    </div>
                     <ImageUploadField 
                       label="Direct Hero Upload" 
                       currentImage={heroImage || siteSettings?.heroImage} 
                       onUpload={(b64) => setHeroImage(b64)} 
                     />
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-white/5">
+                    <h3 className="text-xl font-serif italic border-b border-white/5 pb-4 text-white">Section Titles</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Features Section Title</label>
+                        <input name="featuresTitle" defaultValue={siteSettings?.featuresTitle} placeholder="e.g. Core Features" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Delicacies Section Title</label>
+                        <input name="delicaciesTitle" defaultValue={siteSettings?.delicaciesTitle} placeholder="e.g. Signature Selection" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Events Section Title</label>
+                        <input name="eventsTitle" defaultValue={siteSettings?.eventsTitle} placeholder="e.g. Upcoming Happenings" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Moments Section Title</label>
+                        <input name="momentsTitle" defaultValue={siteSettings?.momentsTitle} placeholder="e.g. Guest Gallery" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Membership Section Title</label>
+                        <input name="membershipTitle" defaultValue={siteSettings?.membershipTitle} placeholder="e.g. Exclusive Perks" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Visit Section Title</label>
+                        <input name="visitTitle" defaultValue={siteSettings?.visitTitle} placeholder="e.g. Find Us" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Guest CTA Title</label>
+                        <input name="ctaTitle" defaultValue={siteSettings?.ctaTitle} placeholder="e.g. Join our Circle" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Guest CTA Description</label>
+                        <textarea name="ctaDescription" defaultValue={siteSettings?.ctaDescription} rows={3} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white text-xs" />
+                      </div>
+                    </div>
                   </div>
  
                   <div className="space-y-6 pt-6">

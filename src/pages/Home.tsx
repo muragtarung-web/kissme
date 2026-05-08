@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowRight, Music, Utensils, Calendar, MapPin, Heart, Star, Gift, Crown, ChevronRight, Zap, X, ChevronLeft, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -210,7 +210,7 @@ export default function Home() {
               <span className="text-gold italic font-light">{settings?.heroSubtitle || t('heroAesthetics')}</span>
             </h1>
             <p className="text-xs uppercase tracking-[0.5em] text-white/40 mb-10 max-w-lg leading-loose font-bold">
-              {t('heroTagline')}
+              {settings?.heroTagline || t('heroTagline')}
             </p>
             <div className="flex flex-wrap gap-6">
               <Link to="/menu" className="btn-primary py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold">
@@ -226,6 +226,9 @@ export default function Home() {
 
       {/* Feature Section */}
       <section className="max-w-7xl mx-auto px-6">
+        {settings?.featuresTitle && (
+          <h2 className="text-4xl font-serif font-bold italic mb-12 text-center text-white">{settings.featuresTitle}</h2>
+        )}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <motion.div 
             whileHover={{ y: -5 }}
@@ -277,9 +280,9 @@ export default function Home() {
             
             <div className="relative z-10">
               <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-6 block">Unlock More Experience</span>
-              <h2 className="text-5xl font-serif font-bold italic mb-6 text-white">Join the <span className="text-gold">Kiss me Store</span> Circle</h2>
+              <h2 className="text-5xl font-serif font-bold italic mb-6 text-white">{settings?.ctaTitle || 'Join the Kiss me Store Circle'}</h2>
               <p className="max-w-xl mx-auto text-[11px] uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mb-10">
-                Register as a member to earn points on every visit, unlock exclusive seasonal menus, and gain priority access to our most sought-after events.
+                {settings?.ctaDescription || 'Register as a member to earn points on every visit, unlock exclusive seasonal menus, and gain priority access to our most sought-after events.'}
               </p>
               <div className="flex justify-center gap-6">
                 <Link to="/login" className="btn-primary">
@@ -299,7 +302,7 @@ export default function Home() {
         <div className="flex items-end justify-between mb-16 px-2">
           <div>
             <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-3 block">Selected for you</span>
-            <h2 className="text-5xl font-serif font-bold italic">{t('featuredDelicacies')} <span className="text-zinc-200 dark:text-white/20">Delicacies</span></h2>
+            <h2 className="text-5xl font-serif font-bold italic">{settings?.delicaciesTitle || t('featuredDelicacies')} <span className="text-zinc-200 dark:text-white/20">Delicacies</span></h2>
           </div>
           <Link to="/menu" className="text-[10px] uppercase tracking-widest font-bold border-b border-gold text-gold pb-1 hover:text-white hover:border-white transition-all">
             {t('seeSelection')}
@@ -485,7 +488,7 @@ export default function Home() {
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 px-2 gap-6">
           <div>
             <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-3 block">Live Terminal</span>
-            <h2 className="text-5xl font-serif font-bold italic">Upcoming <span className="text-zinc-200 dark:text-white/20">Happenings</span></h2>
+            <h2 className="text-5xl font-serif font-bold italic">{settings?.eventsTitle || 'Upcoming Happenings'} <span className="text-zinc-200 dark:text-white/20">Happenings</span></h2>
           </div>
           <Link to="/events" className="text-[10px] uppercase tracking-widest font-bold border-b border-primary text-primary pb-1 hover:text-gold hover:border-gold transition-all">
             See All Events
@@ -573,7 +576,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-16 px-2 gap-6">
             <div>
               <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-3 block">Guest Gallery</span>
-              <h2 className="text-5xl font-serif font-bold italic">Happening <span className="text-zinc-200 dark:text-white/20">Moments</span></h2>
+              <h2 className="text-5xl font-serif font-bold italic">{settings?.momentsTitle || 'Happening Moments'} <span className="text-zinc-200 dark:text-white/20">Moments</span></h2>
             </div>
             <p className="max-w-md text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose">
               Captured experiences from our community. Join the conversation and share your visit with us.
@@ -624,7 +627,7 @@ export default function Home() {
             
             <div className="relative z-10">
               <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-4 block">Membership Perk</span>
-              <h2 className="text-4xl font-serif font-bold italic mb-8">Exclusive Member <span className="text-white/20 uppercase text-2xl not-italic tracking-tighter">Offers</span></h2>
+              <h2 className="text-4xl font-serif font-bold italic mb-8">{settings?.membershipTitle || 'Exclusive Member Offers'} <span className="text-white/20 uppercase text-2xl not-italic tracking-tighter">Offers</span></h2>
               
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="p-6 luxury-card-sub border-gold/10 group cursor-pointer hover:border-gold/30 transition-all">
@@ -678,7 +681,7 @@ export default function Home() {
       <section className="bg-black border-y border-white/5 py-24">
         <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2">
-            <h2 className="text-4xl font-serif font-bold mb-8 text-white">Visit Us Today</h2>
+            <h2 className="text-4xl font-serif font-bold mb-8 text-white">{settings?.visitTitle || 'Visit Us Today'}</h2>
             <div className="space-y-6">
               <div className="flex gap-4">
                 <MapPin className="text-gold shrink-0" />

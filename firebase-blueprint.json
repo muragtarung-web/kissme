@@ -89,6 +89,18 @@
         "heroTitle": { "type": "string" },
         "heroSubtitle": { "type": "string" },
         "heroImage": { "type": "string" },
+        "heroTagline": { "type": "string" },
+        "aboutTitle": { "type": "string" },
+        "aboutText": { "type": "string" },
+        "aboutImage": { "type": "string" },
+        "featuresTitle": { "type": "string" },
+        "delicaciesTitle": { "type": "string" },
+        "eventsTitle": { "type": "string" },
+        "momentsTitle": { "type": "string" },
+        "membershipTitle": { "type": "string" },
+        "visitTitle": { "type": "string" },
+        "ctaTitle": { "type": "string" },
+        "ctaDescription": { "type": "string" },
         "features": { "type": "array" }
       }
     },
