@@ -163,34 +163,34 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
           </nav>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <button 
               onClick={toggleTheme}
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors group"
+              className="p-1.5 md:p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors group"
               title="Toggle Theme"
             >
               {theme === 'light' ? (
-                <Moon size={18} className="text-zinc-600 group-hover:text-gold" />
+                <Moon size={16} className="md:size-[18px] text-zinc-600 group-hover:text-gold" />
               ) : (
-                <Sun size={18} className="text-zinc-300 group-hover:text-gold" />
+                <Sun size={16} className="md:size-[18px] text-zinc-300 group-hover:text-gold" />
               )}
             </button>
 
             <button 
               onClick={toggleLanguage}
-              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors flex items-center gap-2 group"
+              className="p-1 md:p-1.5 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors flex items-center gap-1 md:gap-2 group"
               title="Toggle Language"
             >
-              <LogoK size={22} />
-              <span className="text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 group-hover:text-gold">{language}</span>
+              <LogoK size={18} />
+              <span className="text-[9px] md:text-[10px] font-bold uppercase text-zinc-600 dark:text-zinc-400 group-hover:text-gold">{language}</span>
             </button>
 
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors relative group"
+              className="p-1.5 md:p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors relative group"
             >
-              <ShoppingCart size={18} className="text-zinc-700 dark:text-zinc-200" />
-              <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-[9px] text-white flex items-center justify-center rounded-full font-bold shadow-lg shadow-primary/40">{itemCount}</span>
+              <ShoppingCart size={16} className="md:size-[18px] text-zinc-700 dark:text-zinc-200" />
+              <span className="absolute -top-1 -right-1 w-3.5 h-3.5 md:w-4 md:h-4 bg-primary text-[8px] md:text-[9px] text-white flex items-center justify-center rounded-full font-bold shadow-lg shadow-primary/40">{itemCount}</span>
             </button>
 
             {user && (
@@ -214,7 +214,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       initial={{ opacity: 0, y: 10, scale: 0.95 }}
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      className="absolute right-0 mt-4 w-80 bg-white dark:bg-[#0D0D0D] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60]"
+                      className="absolute right-0 mt-4 w-[calc(100vw-2rem)] md:w-80 bg-white dark:bg-[#0D0D0D] border border-zinc-200 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden z-[60]"
                     >
                       <div className="p-4 border-b border-zinc-100 dark:border-white/5 flex items-center justify-between bg-zinc-50/50 dark:bg-white/5">
                         <h3 className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 dark:text-white/40">Operation Updates</h3>
@@ -287,7 +287,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
             
             {user ? (
-              <div className="flex items-center gap-6">
+              <div className="hidden md:flex items-center gap-6">
                 <Link to="/profile" className="flex items-center gap-4 hover:opacity-80 transition-opacity group">
                   <div className="hidden lg:flex flex-col items-end">
                     <div className="flex items-center gap-1 text-gold text-[10px] font-bold uppercase tracking-wider group-hover:text-primary transition-colors">
@@ -304,13 +304,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 </button>
               </div>
             ) : (
-              <Link to="/login" className="px-6 py-2 bg-zinc-900 dark:bg-white text-zinc-100 dark:text-black text-[11px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-gold dark:hover:bg-gold active:scale-95 shadow-lg shadow-black/10">
+              <Link to="/login" className="hidden md:flex px-6 py-2 bg-zinc-900 dark:bg-white text-zinc-100 dark:text-black text-[11px] font-bold uppercase tracking-[0.2em] transition-all hover:bg-gold dark:hover:bg-gold active:scale-95 shadow-lg shadow-black/10">
                 {t('joinSystem')}
               </Link>
             )}
-            
-            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="md:hidden p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors text-zinc-900 dark:text-white">
-              <MenuIcon size={24} />
+
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors text-zinc-900 dark:text-white">
+              <MenuIcon size={20} className="md:size-6" />
             </button>
           </div>
         </div>
@@ -324,21 +324,45 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             exit={{ opacity: 0, y: -20 }}
             className="fixed inset-0 z-40 bg-black pt-24 px-4 md:hidden"
           >
-            <nav className="flex flex-col gap-6 text-2xl font-serif">
-              <Link onClick={() => setIsMenuOpen(false)} to="/menu" className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <nav className="flex flex-col gap-4 text-2xl font-serif">
+              <Link onClick={() => setIsMenuOpen(false)} to="/menu" className="flex items-center justify-between border-b border-zinc-900 pb-4">
                 <span>Menu</span>
                 <ChevronRight className="text-gold" />
               </Link>
-              <Link onClick={() => setIsMenuOpen(false)} to="/events" className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <Link onClick={() => setIsMenuOpen(false)} to="/events" className="flex items-center justify-between border-b border-zinc-900 pb-4">
                 <span>Events</span>
                 <ChevronRight className="text-gold" />
               </Link>
-              <Link onClick={() => setIsMenuOpen(false)} to="/reservations" className="flex items-center justify-between border-b border-zinc-800 pb-4">
+              <Link onClick={() => setIsMenuOpen(false)} to="/reservations" className="flex items-center justify-between border-b border-zinc-900 pb-4">
                 <span>Reservations</span>
                 <ChevronRight className="text-gold" />
               </Link>
+              <Link onClick={() => setIsMenuOpen(false)} to="/profile" className="flex items-center justify-between border-b border-zinc-900 pb-4">
+                <span>Profile</span>
+                <ChevronRight className="text-gold" />
+              </Link>
               {user?.role === 'admin' && (
-                <Link onClick={() => setIsMenuOpen(false)} to="/admin" className="text-primary">Admin Portal</Link>
+                <Link onClick={() => setIsMenuOpen(false)} to="/admin" className="text-primary border-b border-zinc-900 pb-4">Admin Portal</Link>
+              )}
+              
+              {!user ? (
+                <Link 
+                  to="/login" 
+                  onClick={() => setIsMenuOpen(false)}
+                  className="mt-4 w-full bg-gold text-black py-4 rounded-xl text-sm font-bold uppercase tracking-widest text-center"
+                >
+                  Join System
+                </Link>
+              ) : (
+                <button 
+                  onClick={() => {
+                    handleLogout();
+                    setIsMenuOpen(false);
+                  }}
+                  className="mt-4 flex items-center justify-center gap-3 w-full bg-red-500/10 text-red-500 py-4 rounded-xl text-sm font-bold uppercase tracking-widest border border-red-500/20"
+                >
+                  <LogOut size={18} /> Logout
+                </button>
               )}
             </nav>
           </motion.div>
@@ -351,8 +375,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       {/* Mobile Bottom Bar for Authenticated Users */}
       {user && (
-        <div className="md:hidden fixed bottom-12 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm">
-          <div className="bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full px-6 py-4 flex items-center justify-between shadow-2xl">
+        <div className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm">
+          <div className="bg-black/90 backdrop-blur-3xl border border-white/10 rounded-2xl px-6 py-4 flex items-center justify-between shadow-2xl">
             <Link to="/" className="flex flex-col items-center gap-1 group">
               <Sun size={20} className="text-white/40 group-hover:text-gold transition-colors" />
               <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Home</span>

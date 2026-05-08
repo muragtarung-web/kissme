@@ -281,7 +281,7 @@ export default function Profile() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 onClick={() => handleNotificationClick(n)}
-                className={`p-6 rounded-2xl border flex items-start gap-6 transition-all cursor-pointer group ${
+                className={`p-4 md:p-6 rounded-2xl border flex items-start gap-4 md:gap-6 transition-all cursor-pointer group ${
                   !n.read 
                     ? 'bg-zinc-50 dark:bg-white/[0.03] border-zinc-200 dark:border-white/10' 
                     : 'bg-transparent border-zinc-100 dark:border-white/5 opacity-60'

@@ -7,7 +7,7 @@ import {
   TrendingUp, Users, ShoppingCart, AlertCircle, 
   BarChart3, Settings, Package, Calendar, 
   LayoutDashboard, Plus, DollarSign, Edit, Trash2, X, Search,
-  Camera, Globe, Heart, Bell, ArrowRight, Eye, Grid, LogOut
+  Camera, Globe, Heart, Bell, ArrowRight, Eye, Grid, LogOut, CheckCheck
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Order, Product, Category, Event as AppEvent, Moment, SiteSettings, Reminder, Reservation, Staff, Shift } from '../../types';
@@ -1028,10 +1028,12 @@ export default function AdminDashboard() {
     setShowPayrollSummary(true);
   };
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
-    <div className="flex bg-[#0A0A0A] h-screen text-[#F5F5F5] font-sans selection:bg-gold/30 overflow-hidden">
+    <div className="flex bg-[#0A0A0A] h-screen text-[#F5F5F5] font-sans selection:bg-gold/30 overflow-hidden relative">
       {/* Admin Sidebar */}
-      <aside className="w-72 h-full bg-[#0D0D0D] border-r border-white/5 flex flex-col z-10 shadow-2xl overflow-hidden flex-shrink-0">
+      <aside className={`fixed lg:relative inset-y-0 left-0 w-72 h-full bg-[#0D0D0D] border-r border-white/5 flex flex-col z-[60] shadow-2xl overflow-hidden flex-shrink-0 transition-transform duration-300 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`}>
         <div className="p-8 border-b border-white/5 shrink-0">
           <h1 className="text-gold font-serif text-2xl tracking-tight leading-none uppercase">Kiss me Store</h1>
           <p className="text-[10px] uppercase tracking-widest text-white/40 mt-2 font-bold">Terminal Control</p>
@@ -1143,15 +1145,31 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Command Center */}
-      <main className="flex-1 flex flex-col overflow-y-auto">
+      <main className="flex-1 flex flex-col overflow-y-auto relative">
+        {/* Backdrop for mobile sidebar */}
+        {isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-[55] lg:hidden"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Top Stats Ribbon */}
-        <div className="h-20 bg-black/60 backdrop-blur-xl border-b border-white/5 flex items-center px-10 justify-between shrink-0 text-white">
-          <div className="flex space-x-12">
-            <RibbonStat label="Daily Sales" value={`₱${calculateDailySales().toLocaleString()}`} />
-            <RibbonStat label="Active Guests" value={calculateActiveGuests().toString()} live />
-            <RibbonStat label="Queue" value={`${orders.filter(o => o.status === 'pending').length} Pending`} />
+        <div className="h-auto min-h-[5rem] lg:h-20 bg-black/60 backdrop-blur-xl border-b border-white/5 flex flex-col lg:flex-row items-center px-4 lg:px-10 justify-between shrink-0 text-white py-4 lg:py-0 gap-6">
+          <div className="flex items-center gap-6 w-full lg:w-auto">
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="lg:hidden p-2 hover:bg-white/5 rounded-lg border border-white/10 transition-colors text-gold"
+            >
+              <Grid size={18} />
+            </button>
+            <div className="flex items-center gap-6 md:gap-12 overflow-x-auto scrollbar-none py-1">
+              <RibbonStat label="Daily Sales" value={`₱${calculateDailySales().toLocaleString()}`} />
+              <RibbonStat label="Active Guests" value={calculateActiveGuests().toString()} live />
+              <RibbonStat label="Queue" value={`${orders.filter(o => o.status === 'pending').length} Pending`} />
+            </div>
           </div>
-          <div className="flex gap-4">
+          <div className="flex gap-4 w-full lg:w-auto overflow-x-auto lg:overflow-visible pb-2 lg:pb-0">
             {view === 'menu' && (
               <button 
                 onClick={() => { setEditingProduct(null); setShowProductModal(true); }}
@@ -1896,8 +1914,8 @@ export default function AdminDashboard() {
                 </div>
               </header>
 
-                  <div className="bg-[#121212] border border-white/5 rounded-xl overflow-hidden shadow-2xl">
-                    <table className="w-full text-left border-collapse">
+                  <div className="bg-[#121212] border border-white/5 rounded-xl overflow-hidden shadow-2xl overflow-x-auto">
+                    <table className="w-full text-left border-collapse min-w-[800px]">
                       <thead>
                         <tr className="border-b border-white/5 bg-white/[0.02]">
                           <th className="p-4 w-10 text-left">
@@ -1934,20 +1952,32 @@ export default function AdminDashboard() {
                                 />
                               </td>
                               <td className="p-4 text-xs font-mono text-gold uppercase text-left">#{order.id.slice(-8)}</td>
-                            <td className="p-4 text-left">
-                              <select 
-                                value={order.status}
-                                onChange={(e) => updateOrderStatus(order.id, e.target.value)}
-                                className={`bg-white/5 border border-white/10 rounded px-2 py-1 text-[9px] font-bold uppercase tracking-widest outline-none focus:border-gold transition-colors ${
-                                  order.status === 'completed' ? 'text-green-500' : 
-                                  order.status === 'cancelled' ? 'text-red-500' : 'text-primary'
-                                }`}
-                              >
-                                {['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'].map(status => (
-                                  <option key={status} value={status} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white font-bold">{status}</option>
-                                ))}
-                              </select>
-                            </td>
+                              <td className="p-4 text-left">
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-2 h-2 rounded-full animate-pulse ${
+                                      order.status === 'completed' ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 
+                                      order.status === 'cancelled' ? 'bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 
+                                      'bg-gold shadow-[0_0_8px_rgba(212,175,55,0.5)]'
+                                    }`} />
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${
+                                      order.status === 'completed' ? 'text-green-500' : 
+                                      order.status === 'cancelled' ? 'text-red-500' : 'text-gold'
+                                    }`}>
+                                      {order.status}
+                                    </span>
+                                  </div>
+                                  <select 
+                                    value={order.status}
+                                    onChange={(e) => updateOrderStatus(order.id, e.target.value)}
+                                    className="bg-white/5 border border-white/10 rounded px-2 py-1.5 text-[9px] font-bold uppercase tracking-widest outline-none focus:border-gold transition-colors text-white/60 hover:text-white"
+                                  >
+                                    {['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'cancelled', 'completed'].map(status => (
+                                      <option key={status} value={status} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white font-bold">{status}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              </td>
                             <td className="p-4 text-[10px] font-bold uppercase tracking-widest text-white/60 text-left">{order.type}</td>
                             <td className="p-4 text-sm font-bold text-white text-left">₱{order.total}</td>
                             <td className="p-4 text-[10px] text-white/20 font-bold uppercase tracking-widest text-left">
@@ -2817,15 +2847,46 @@ export default function AdminDashboard() {
             animate={{ opacity: 1, y: 0 }}
             className="bg-[#0A0A0A] border border-white/10 w-full max-w-4xl rounded-2xl shadow-3xl overflow-hidden flex flex-col max-h-[90vh]"
           >
-            <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
-              <div>
-                <h2 className="text-2xl font-serif italic mb-1 text-white">Order <span className="text-gold">Details</span></h2>
-                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Reference: #{selectedOrder.id}</p>
+            <div className="p-4 md:p-8 border-b border-white/5 flex flex-col gap-4 md:gap-6 bg-white/[0.02]">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h2 className="text-xl md:text-2xl font-serif italic mb-1 text-white">Order <span className="text-gold">Details</span></h2>
+                  <p className="text-[9px] md:text-[10px] uppercase tracking-widest text-white/40 font-bold">Reference: #{selectedOrder.id}</p>
+                </div>
+                <button onClick={() => setShowOrderModal(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white"><X size={20}/></button>
               </div>
-              <button onClick={() => setShowOrderModal(false)} className="p-2 hover:bg-white/5 rounded-full transition-colors text-white"><X size={20}/></button>
+
+              {/* Enhanced Visual Status Tracker */}
+              <div className="px-2 md:px-4 py-2 flex items-center justify-between relative max-w-2xl mx-auto w-full gap-1">
+                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10 -translate-y-1/2 z-0" />
+                {['pending', 'confirmed', 'cooking', 'ready', 'delivered'].map((s, idx) => {
+                  const statuses = ['pending', 'confirmed', 'cooking', 'ready', 'delivery', 'delivered', 'completed'];
+                  const currentIndex = statuses.indexOf(selectedOrder.status);
+                  const stepIndex = statuses.indexOf(s);
+                  const isPast = currentIndex > stepIndex || selectedOrder.status === 'completed';
+                  const isCurrent = selectedOrder.status === s;
+                  
+                  return (
+                    <div key={s} className="relative z-10 flex flex-col items-center gap-1.5">
+                       <div className={`w-5 h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center border-2 transition-all duration-500 bg-black ${
+                         isPast ? 'bg-gold border-gold text-black' : 
+                         isCurrent ? 'border-gold text-gold animate-pulse shadow-[0_0_15px_rgba(212,175,55,0.4)]' : 
+                         'border-white/20 text-white/20'
+                       }`}>
+                         {isPast ? <CheckCheck size={10} /> : <span className="text-[8px] md:text-[10px] font-bold">{idx + 1}</span>}
+                       </div>
+                       <span className={`text-[7px] md:text-[8px] uppercase tracking-tighter md:tracking-widest font-bold transition-colors text-center truncate max-w-[50px] md:max-w-none ${
+                         isPast || isCurrent ? 'text-gold' : 'text-white/20'
+                       }`}>
+                         {s}
+                       </span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
  
-            <div className="flex-grow overflow-y-auto p-8 grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <div className="flex-grow overflow-y-auto p-4 md:p-8 grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-10">
               {/* Items List */}
               <div className="lg:col-span-2 space-y-8">
                 <div>
