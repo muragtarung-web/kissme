@@ -24,7 +24,7 @@ export default function Menu() {
   const { t } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [flyingIcons, setFlyingIcons] = useState<{ id: number; x: number; y: number; image: string }[]>([]);
+  const [flyingIcons, setFlyingIcons] = useState<{ id: number; x: number; y: number; tx: number; ty: number; image: string }[]>([]);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -63,12 +63,20 @@ export default function Menu() {
       return;
     }
 
+    // Calculate target position
+    const cartBtn = document.getElementById('cart-trigger');
+    const target = cartBtn?.getBoundingClientRect();
+    const tx = target ? target.left + target.width / 2 : window.innerWidth - 100;
+    const ty = target ? target.top + target.height / 2 : 50;
+
     // Trigger flying animation
     const id = Date.now();
     setFlyingIcons(prev => [...prev, { 
       id, 
       x: event.clientX, 
       y: event.clientY, 
+      tx,
+      ty,
       image: product.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'
     }]);
 
@@ -234,8 +242,8 @@ export default function Menu() {
               rotate: 0
             }}
             animate={{ 
-              x: window.innerWidth - 100, 
-              y: 50, 
+              x: icon.tx - 20, 
+              y: icon.ty - 20, 
               scale: 0.1,
               opacity: 0,
               rotate: 360

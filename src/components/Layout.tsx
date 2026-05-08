@@ -186,6 +186,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </button>
 
             <button 
+              id="cart-trigger"
               onClick={() => setIsCartOpen(true)}
               className="p-1.5 md:p-2 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-full transition-colors relative group"
             >

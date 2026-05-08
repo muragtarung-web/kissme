@@ -1,22 +1,48 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowRight, Music, Utensils, Calendar, MapPin, Heart, Star, Gift, Crown, ChevronRight, Zap } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Music, Utensils, Calendar, MapPin, Heart, Star, Gift, Crown, ChevronRight, Zap, X, ChevronLeft, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../hooks/useLanguage';
 import { useAuth } from '../hooks/useAuth';
+import { useCart } from '../hooks/useCart';
 import { db } from '../lib/firebase';
 import { collection, query, getDocs, limit, orderBy, onSnapshot } from 'firebase/firestore';
 import { SiteSettings, Moment, Event as AppEvent, Product } from '../types';
 import { useLoading } from '../hooks/useLoading';
+import toast from 'react-hot-toast';
 
 export default function Home() {
   const { t } = useLanguage();
   const { user } = useAuth();
+  const { addToCart: addToCartContext } = useCart();
+  const navigate = useNavigate();
   const { showLoading, hideLoading } = useLoading();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [featuredMoments, setFeaturedMoments] = useState<Moment[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+  const addToCart = (product: Product, event: React.MouseEvent) => {
+    if (!user) {
+      toast.error('Please login to place an order');
+      navigate('/login');
+      return;
+    }
+    addToCartContext(product);
+    toast.success(`${t('addToCart')} ${product.name}`, {
+      icon: '🛒',
+      style: {
+        background: '#D4AF37',
+        color: '#000',
+        fontWeight: 'bold',
+        fontSize: '10px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em'
+      }
+    });
+  };
 
   const defaultHeroImage = "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000";
 
@@ -47,9 +73,10 @@ export default function Home() {
         setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() } as AppEvent)));
         checkLoading();
       }, () => checkLoading()),
-      onSnapshot(query(collection(db, 'products'), limit(50)), (snap) => {
+      onSnapshot(query(collection(db, 'products'), limit(100)), (snap) => {
         const allProds = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
-        setFeaturedProducts(allProds.filter(p => p.featured).slice(0, 4));
+        // Show only available products, prioritized by 'featured' status
+        setFeaturedProducts(allProds.filter(p => p.available).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)));
         checkLoading();
       }, () => checkLoading())
     ];
@@ -279,26 +306,56 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {featuredProducts.length > 0 ? featuredProducts.map((item, id) => (
             <motion.div 
               key={item.id}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: id * 0.1 }}
+              transition={{ delay: id * 0.05 }}
               viewport={{ once: true }}
-              className="group cursor-pointer"
+              className="group cursor-pointer flex flex-col h-full bg-white/[0.02] border border-white/5 rounded-2xl p-4 hover:border-gold/30 hover:bg-white/[0.05] transition-all duration-500"
+              onClick={() => {
+                setSelectedProductForModal(item);
+                setCurrentImageIndex(0);
+              }}
             >
-              <div className="aspect-[4/5] overflow-hidden rounded-xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-700">
+              <div className="aspect-square overflow-hidden rounded-xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-700 bg-zinc-900 border border-white/10 relative">
                 <img 
                   src={item.image} 
                   alt={item.name} 
                   className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
                   referrerPolicy="no-referrer"
                 />
+                {item.featured && (
+                  <div className="absolute top-3 left-3 bg-gold text-black text-[8px] font-bold px-2 py-1 uppercase tracking-widest flex items-center gap-1 shadow-lg">
+                    <Star size={10} className="fill-black" /> Signature
+                  </div>
+                )}
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
+                  <span className="bg-white/10 backdrop-blur-md border border-white/20 text-white text-[9px] uppercase tracking-widest font-bold px-4 py-2 rounded-full">Read More</span>
+                </div>
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-gold font-bold mb-2">₱{item.price}</p>
-              <h4 className="text-xl font-serif italic mb-1 text-white">{item.name}</h4>
+              <div className="flex flex-col flex-1 px-2">
+                <div className="flex justify-between items-start gap-2 mb-2">
+                  <h4 className="text-xl font-serif italic text-white group-hover:text-gold transition-colors">{item.name}</h4>
+                  <p className="text-sm font-bold text-gold whitespace-nowrap">₱{item.price}</p>
+                </div>
+                <p className="text-[9px] uppercase tracking-widest text-zinc-500 dark:text-white/40 font-bold leading-relaxed line-clamp-2 mt-auto">
+                  {item.description}
+                </p>
+                <div className="mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(item, e);
+                    }}
+                    className="w-full py-2 bg-white/5 hover:bg-gold hover:text-black border border-white/10 hover:border-gold rounded text-[9px] uppercase font-bold tracking-widest transition-all"
+                  >
+                    Quick Add
+                  </button>
+                </div>
+              </div>
             </motion.div>
           )) : (
             <div className="col-span-full py-20 text-center">
@@ -307,6 +364,121 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* Image Gallery Modal */}
+      <AnimatePresence>
+        {selectedProductForModal && (
+          <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedProductForModal(null)}
+              className="absolute inset-0 bg-black/95 backdrop-blur-xl"
+            />
+            
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row shadow-gold/10 border border-white/5"
+            >
+              <button 
+                onClick={() => setSelectedProductForModal(null)}
+                className="absolute top-6 right-6 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-white hover:text-black transition-all border border-white/10"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Main Display */}
+              <div className="flex-grow relative overflow-hidden bg-zinc-900 group">
+                <img 
+                  src={(selectedProductForModal.images && selectedProductForModal.images.length > 0) 
+                    ? selectedProductForModal.images[currentImageIndex] 
+                    : selectedProductForModal.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'
+                  } 
+                  className="w-full h-full object-contain"
+                  referrerPolicy="no-referrer"
+                />
+                
+                {selectedProductForModal.images && selectedProductForModal.images.length > 1 && (
+                  <>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedProductForModal.images!.length - 1);
+                      }}
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black"
+                    >
+                      <ChevronLeft size={24} />
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setCurrentImageIndex(prev => prev < selectedProductForModal.images!.length - 1 ? prev + 1 : 0);
+                      }}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black"
+                    >
+                      <ChevronRight size={24} />
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* Info Sidebar */}
+              <div className="w-full md:w-80 bg-[#0D0D0D] p-8 flex flex-col border-l border-white/5">
+                <div className="flex-grow">
+                  <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-4 block">Product Insight</span>
+                  <h2 className="text-3xl font-serif italic text-white mb-4 leading-tight">{selectedProductForModal.name}</h2>
+                  <p className="text-2xl font-serif text-gold mb-8">₱{selectedProductForModal.price}</p>
+                  
+                  <div className="space-y-6">
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-2">Description</h4>
+                      <p className="text-sm text-white/70 leading-relaxed font-medium">{selectedProductForModal.description}</p>
+                    </div>
+
+                    {selectedProductForModal.images && selectedProductForModal.images.length > 1 && (
+                      <div>
+                        <h4 className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-3">Gallery</h4>
+                        <div className="grid grid-cols-4 gap-2">
+                          {selectedProductForModal.images.map((img, idx) => (
+                            <button 
+                              key={idx}
+                              onClick={() => setCurrentImageIndex(idx)}
+                              className={`aspect-square rounded border transition-all overflow-hidden ${currentImageIndex === idx ? 'border-gold ring-1 ring-gold scale-105' : 'border-white/10 opacity-50 hover:opacity-100'}`}
+                            >
+                              <img src={img} className="w-full h-full object-cover shadow-sm" />
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="pt-8 mt-auto border-t border-white/5 space-y-4">
+                  <button 
+                    onClick={(e) => {
+                      addToCart(selectedProductForModal, e as any);
+                      setSelectedProductForModal(null);
+                    }}
+                    className="w-full py-5 bg-gold text-black font-bold uppercase tracking-[0.4em] text-[11px] hover:bg-white transition-all shadow-[0_0_30px_rgba(212,175,55,0.1)] rounded-sm"
+                  >
+                    Add to Order
+                  </button>
+                  <button 
+                    onClick={() => setSelectedProductForModal(null)}
+                    className="w-full text-[10px] text-white/40 hover:text-white uppercase font-bold tracking-widest transition-colors py-2"
+                  >
+                    Close Inspection
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Upcoming Happenings Section */}
       <section className="max-w-7xl mx-auto px-6">
