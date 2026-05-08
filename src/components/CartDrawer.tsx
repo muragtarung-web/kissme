@@ -36,6 +36,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
           productId: item.product.id,
           name: item.product.name,
           price: item.product.price,
+          image: item.product.image,
           quantity: item.quantity
         })),
         total,

@@ -25,6 +25,7 @@ export interface Product {
   price: number;
   categoryId: string;
   image: string;
+  images?: string[];
   available: boolean;
   stock?: number;
   trackInventory?: boolean;

@@ -395,10 +395,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <Award size={20} className="text-white/40 group-hover:text-gold transition-colors" />
               <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Events</span>
             </Link>
-            <Link to="/profile" className="flex flex-col items-center gap-1 group">
-              <User size={20} className="text-white/40 group-hover:text-gold transition-colors" />
-              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-gold">Me</span>
-            </Link>
+            <button onClick={handleLogout} className="flex flex-col items-center gap-1 group">
+              <LogOut size={20} className="text-white/40 group-hover:text-red-500 transition-colors" />
+              <span className="text-[8px] uppercase tracking-tighter text-white/20 font-bold group-hover:text-red-500">Exit</span>
+            </button>
           </div>
         </div>
       )}

@@ -214,7 +214,7 @@ export default function Profile() {
               </div>
               {user.tier !== 'Gold' && (
                 <p className="text-[10px] uppercase tracking-widest font-bold opacity-60 text-right">
-                   {nextTierPoints - user.points} points to next level
+                   {nextTierPoints - user.points} {t('nextLevelPoints')}
                 </p>
               )}
             </div>

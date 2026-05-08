@@ -52,6 +52,7 @@ export default function AdminDashboard() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [productImage, setProductImage] = useState<string>('');
+  const [productImages, setProductImages] = useState<string[]>([]);
   const [showEventModal, setShowEventModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState<AppEvent | null>(null);
   const [eventImage, setEventImage] = useState<string>('');
@@ -116,6 +117,16 @@ export default function AdminDashboard() {
     setLoading(false);
     return () => unsubs.forEach(unsub => unsub());
   }, []);
+
+  useEffect(() => {
+    if (editingProduct) {
+      setProductImages(editingProduct.images || (editingProduct.image ? [editingProduct.image] : []));
+      setProductImage(editingProduct.image || '');
+    } else {
+      setProductImages([]);
+      setProductImage('');
+    }
+  }, [editingProduct]);
 
   const handleSaveReminder = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -362,7 +373,8 @@ export default function AdminDashboard() {
       description: formData.get('description') as string,
       price: Number(formData.get('price')),
       categoryId: formData.get('categoryId') as string,
-      image: productImage || formData.get('image') as string,
+      image: productImage || productImages[0] || formData.get('image') as string || '',
+      images: productImages,
       available: formData.get('available') === 'on',
       trackInventory: formData.get('trackInventory') === 'on',
       stock: Number(formData.get('stock')) || 0,
@@ -455,6 +467,7 @@ export default function AdminDashboard() {
           id: item.product.id,
           name: item.product.name,
           price: item.product.price,
+          image: item.product.image,
           quantity: item.quantity
         })),
         total,
@@ -1028,7 +1041,29 @@ export default function AdminDashboard() {
     setShowPayrollSummary(true);
   };
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showCategoryModal, setShowCategoryModal] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+
+  const handleAddCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) return;
+
+    try {
+      showLoading('Adding new category...');
+      await addDoc(collection(db, 'categories'), {
+        name: newCategoryName.trim(),
+        order: categories.length + 1,
+        active: true
+      });
+      toast.success('Category added');
+      setNewCategoryName('');
+      setShowCategoryModal(false);
+    } catch (error) {
+      toast.error('Failed to add category');
+    } finally {
+      hideLoading();
+    }
+  };
 
   return (
     <div className="flex bg-[#0A0A0A] h-screen text-[#F5F5F5] font-sans selection:bg-gold/30 overflow-hidden relative">
@@ -1908,6 +1943,7 @@ export default function AdminDashboard() {
                       placeholder="Search ID..."
                       value={orderSearch}
                       onChange={(e) => setOrderSearch(e.target.value)}
+                      onKeyDown={(e) => e.stopPropagation()}
                       className="bg-white/5 border border-white/10 rounded-xl pl-12 pr-6 py-3 text-sm outline-none focus:border-gold w-full md:w-64 transition-all text-white"
                     />
                   </div>
@@ -2016,6 +2052,7 @@ export default function AdminDashboard() {
                         placeholder="Search Entity..."
                         value={posSearch}
                         onChange={(e) => setPosSearch(e.target.value)}
+                        onKeyDown={(e) => e.stopPropagation()}
                         className="bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-lg pl-10 pr-4 py-2 text-xs outline-none focus:border-gold w-64 transition-all text-zinc-900 dark:text-white"
                       />
                     </div>
@@ -2558,33 +2595,92 @@ export default function AdminDashboard() {
             <form onSubmit={handleSaveProduct} className="space-y-6">
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Entity Name</label>
-                <input name="name" defaultValue={editingProduct?.name} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input 
+                  name="name" 
+                  defaultValue={editingProduct?.name} 
+                  required 
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" 
+                />
               </div>
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Initial Asset URL (Optional)</label>
-                <input name="image" defaultValue={editingProduct?.image} placeholder="https://..." className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input 
+                  name="image" 
+                  defaultValue={editingProduct?.image} 
+                  placeholder="https://..." 
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" 
+                />
               </div>
 
               <ImageUploadField 
-                label="Direct Photo Upload" 
-                currentImage={editingProduct?.image} 
-                onUpload={(b64) => setProductImage(b64)} 
+                label="Digital Asset Upload (Multiple Allowed)" 
+                currentImage={productImage} 
+                onUpload={(b64) => {
+                  setProductImage(b64);
+                  if (b64) setProductImages(prev => [...prev, b64]);
+                }} 
               />
+
+              {productImages.length > 0 && (
+                <div className="space-y-3">
+                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Terminal Gallery ({productImages.length})</label>
+                  <div className="grid grid-cols-4 gap-3 bg-white/5 p-4 rounded-xl border border-white/5">
+                    {productImages.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square group">
+                        <img src={img} className="w-full h-full object-cover rounded-lg border border-white/10" />
+                        <button 
+                          type="button"
+                          onClick={() => setProductImages(prev => prev.filter((_, i) => i !== idx))}
+                          className="absolute -top-2 -right-2 p-1.5 bg-red-500 text-white rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-all scale-75 hover:scale-100"
+                        >
+                          <X size={10} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1">
                   <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Price (₱)</label>
-                  <input name="price" type="number" defaultValue={editingProduct?.price} required className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                  <input 
+                    name="price" 
+                    type="number" 
+                    defaultValue={editingProduct?.price} 
+                    required 
+                    onKeyDown={(e) => e.stopPropagation()}
+                    className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" 
+                  />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Category</label>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Category</label>
+                    <button 
+                      type="button"
+                      onClick={() => setShowCategoryModal(true)}
+                      className="text-[9px] uppercase tracking-widest text-gold hover:underline font-bold"
+                    >
+                      + New Category
+                    </button>
+                  </div>
                   <select name="categoryId" defaultValue={editingProduct?.categoryId} className="w-full bg-zinc-100 dark:bg-white/5 border border-zinc-200 dark:border-white/10 p-3 rounded outline-none focus:border-gold text-zinc-900 dark:text-white">
+                    <option value="" className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">Select Category</option>
                     {categories.map(c => <option key={c.id} value={c.id} className="bg-white dark:bg-[#121212] text-zinc-900 dark:text-white">{c.name}</option>)}
                   </select>
                 </div>
               </div>
               <div className="space-y-1 text-left">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Description</label>
-                <textarea name="description" defaultValue={editingProduct?.description} rows={3} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <textarea 
+                  name="description" 
+                  defaultValue={editingProduct?.description} 
+                  rows={3} 
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" 
+                />
               </div>
               <div className="flex flex-wrap gap-6 p-4 bg-white/5 rounded-xl border border-white/5">
                 <label className="flex items-center gap-2 cursor-pointer group">
@@ -2614,7 +2710,13 @@ export default function AdminDashboard() {
 
               <div className="space-y-1">
                 <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Initial / Current Stock</label>
-                <input name="stock" type="number" defaultValue={editingProduct?.stock || 0} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                <input 
+                  name="stock" 
+                  type="number" 
+                  defaultValue={editingProduct?.stock || 0} 
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" 
+                />
               </div>
 
               <button type="submit" className="w-full py-4 bg-gold text-black font-bold uppercase tracking-[0.3em] text-[11px] hover:bg-white transition-all shadow-xl">
@@ -2894,8 +2996,12 @@ export default function AdminDashboard() {
                   <div className="space-y-4">
                     {selectedOrder.items.map((item, idx) => (
                       <div key={idx} className="flex gap-4 items-center p-4 bg-white/[0.02] border border-white/5 rounded-xl">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-900 shrink-0 text-left">
-                          {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-zinc-900 shrink-0 text-left flex items-center justify-center">
+                          {item.image ? (
+                            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <ShoppingCart size={24} className="text-white/10" />
+                          )}
                         </div>
                         <div className="flex-grow text-left">
                           <h4 className="font-serif italic text-lg leading-tight text-white">{item.name}</h4>
@@ -3363,6 +3469,57 @@ export default function AdminDashboard() {
             <div className="mt-8 text-center text-[7px] text-black/30 uppercase tracking-[0.5em] italic">
               Authenticity Verified • System Cluster #409978713286
             </div>
+
+            {/* Category Modal */}
+            <AnimatePresence>
+              {showCategoryModal && (
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                  <motion.div 
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowCategoryModal(false)}
+                    className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                  />
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="relative w-full max-w-sm bg-[#0D0D0D] border border-white/10 rounded-2xl p-6 shadow-2xl"
+                  >
+                    <h3 className="text-xl font-serif italic text-white mb-6">New <span className="text-gold">Category</span></h3>
+                    <form onSubmit={handleAddCategory} className="space-y-4">
+                      <div>
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold mb-2 block">Category Name</label>
+                        <input 
+                          autoFocus
+                          value={newCategoryName}
+                          onChange={(e) => setNewCategoryName(e.target.value)}
+                          onKeyDown={(e) => e.stopPropagation()}
+                          placeholder="e.g. Delicacies, Beverages"
+                          className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white"
+                        />
+                      </div>
+                      <div className="flex gap-4 pt-4">
+                        <button 
+                          type="button"
+                          onClick={() => setShowCategoryModal(false)}
+                          className="flex-1 px-6 py-3 border border-white/10 rounded text-[10px] uppercase tracking-widest font-bold text-white hover:bg-white/5 transition-colors"
+                        >
+                          Cancel
+                        </button>
+                        <button 
+                          type="submit"
+                          className="flex-1 px-6 py-3 bg-gold text-black rounded text-[10px] uppercase tracking-widest font-bold hover:bg-white transition-colors"
+                        >
+                          Create
+                        </button>
+                      </div>
+                    </form>
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
       )}

@@ -38,6 +38,7 @@
         "price": { "type": "number" },
         "categoryId": { "type": "string" },
         "image": { "type": "string" },
+        "images": { "type": "array" },
         "available": { "type": "boolean" },
         "stock": { "type": "number" },
         "trackInventory": { "type": "boolean" },
