@@ -744,6 +744,11 @@ export default function AdminDashboard() {
       membersTitle: formData.get('membersTitle') as string,
       ctaTitle: formData.get('ctaTitle') as string,
       ctaDescription: formData.get('ctaDescription') as string,
+      featuredEventBadge: formData.get('featuredEventBadge') as string,
+      featuredEventDate: formData.get('featuredEventDate') as string,
+      featuredEventTitle: formData.get('featuredEventTitle') as string,
+      featuredEventDescription: formData.get('featuredEventDescription') as string,
+      featuredEventImage: formData.get('featuredEventImage') as string,
       features: [
         { title: formData.get('feature_0_title') as string, description: formData.get('feature_0_desc') as string, icon: 'Utensils' },
         { title: formData.get('feature_1_title') as string, description: formData.get('feature_1_desc') as string, icon: 'Music' },
@@ -2356,6 +2361,33 @@ export default function AdminDashboard() {
                       currentImage={heroImage || siteSettings?.heroImage} 
                       onUpload={(b64) => setHeroImage(b64)} 
                     />
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-white/5 text-left">
+                    <h3 className="text-xl font-serif italic border-b border-white/5 pb-4 text-white">Featured Event Terminal</h3>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Configure the main promotional event displayed on happenings page</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Badge (e.g. Grand Entry)</label>
+                        <input name="featuredEventBadge" defaultValue={siteSettings?.featuredEventBadge} placeholder="Grand Entry" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Date</label>
+                        <input name="featuredEventDate" defaultValue={siteSettings?.featuredEventDate} placeholder="May 12, 2026" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Title</label>
+                        <input name="featuredEventTitle" defaultValue={siteSettings?.featuredEventTitle} placeholder="The Anniversary Sound Terminal" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Description</label>
+                        <textarea name="featuredEventDescription" defaultValue={siteSettings?.featuredEventDescription} rows={3} className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white text-xs" />
+                      </div>
+                      <div className="space-y-1 md:col-span-2">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Image URL</label>
+                        <input name="featuredEventImage" defaultValue={siteSettings?.featuredEventImage} placeholder="https://images.unsplash.com/..." className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-6 pt-6 border-t border-white/5">

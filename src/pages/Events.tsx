@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Calendar, Music, Ticket, ArrowRight, User, X, MapPin, Clock } from 'lucide-react';
 import { db } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, onSnapshot } from 'firebase/firestore';
-import { Event as AppEvent } from '../types';
+import { collection, getDocs, query, orderBy, onSnapshot, doc } from 'firebase/firestore';
+import { Event as AppEvent, SiteSettings } from '../types';
 import { useLanguage } from '../hooks/useLanguage';
 import { handleFirestoreError, OperationType } from '../lib/firestore-errors';
 import { Link } from 'react-router-dom';
@@ -12,13 +12,22 @@ import { useLoading } from '../hooks/useLoading';
 export default function Events() {
   const { showLoading, hideLoading } = useLoading();
   const [events, setEvents] = useState<AppEvent[]>([]);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<AppEvent | null>(null);
   const { t } = useLanguage();
 
   useEffect(() => {
     showLoading('Scanning for happenings...');
-    const unsub = onSnapshot(query(collection(db, 'events'), orderBy('date')), (snap) => {
+    
+    // Fetch site settings
+    const unsubSettings = onSnapshot(doc(db, 'settings', 'main'), (snap) => {
+      if (snap.exists()) {
+        setSettings({ id: snap.id, ...snap.data() } as SiteSettings);
+      }
+    });
+
+    const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date')), (snap) => {
       setEvents(snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as AppEvent)));
       setLoading(false);
       hideLoading();
@@ -28,7 +37,10 @@ export default function Events() {
       hideLoading();
     });
     
-    return () => unsub();
+    return () => {
+      unsubSettings();
+      unsubEvents();
+    };
   }, []);
 
   return (
@@ -45,16 +57,16 @@ export default function Events() {
           animate={{ opacity: 1 }}
           onClick={() => setSelectedEvent({
              id: 'featured',
-             title: t('eventConcert'),
-             desc: 'Celebrating a decade of divine aesthetics. Multiple soundscapes, raffles, and culinary showcases await in our grand auditorium. Experience the fusion of taste and sound like never before.',
-             date: 'May 12, 2026',
+             title: settings?.featuredEventTitle || t('eventConcert'),
+             desc: settings?.featuredEventDescription || 'Celebrating a decade of divine aesthetics. Multiple soundscapes, raffles, and culinary showcases await in our grand auditorium. Experience the fusion of taste and sound like never before.',
+             date: settings?.featuredEventDate || 'May 12, 2026',
              time: '19:00',
-             img: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000'
+             img: settings?.featuredEventImage || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000'
           } as AppEvent)}
           className="lg:col-span-2 relative h-[600px] overflow-hidden group cursor-pointer border border-white/5 shadow-2xl"
         >
           <img 
-            src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000" 
+            src={settings?.featuredEventImage || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000"} 
             alt="Featured event" 
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             referrerPolicy="no-referrer"
@@ -65,14 +77,18 @@ export default function Events() {
           <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-[#0A0A0A] via-transparent to-transparent" />
           <div className="absolute bottom-16 left-16 right-16 text-left">
             <div className="flex items-center gap-4 mb-6">
-              <span className="bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-xl text-white">Grand Entry</span>
+              <span className="bg-primary px-4 py-1 text-[10px] font-bold uppercase tracking-widest shadow-xl text-white">
+                {settings?.featuredEventBadge || 'Grand Entry'}
+              </span>
               <span className="text-[10px] uppercase tracking-widest font-bold flex items-center gap-2 text-zinc-900 dark:text-white">
-                <Calendar size={14} className="text-gold" /> May 12, 2026
+                <Calendar size={14} className="text-gold" /> {settings?.featuredEventDate || 'May 12, 2026'}
               </span>
             </div>
-            <h2 className="text-6xl font-serif font-bold italic mb-6 leading-tight max-w-3xl text-white">{t('eventConcert')}</h2>
+            <h2 className="text-6xl font-serif font-bold italic mb-6 leading-tight max-w-3xl text-white">
+              {settings?.featuredEventTitle || t('eventConcert')}
+            </h2>
             <p className="text-white/60 text-[11px] uppercase tracking-widest font-bold leading-loose max-w-xl mb-10">
-              Celebrating a decade of divine aesthetics. Multiple soundscapes, raffles, and culinary showcases await.
+              {settings?.featuredEventDescription || 'Celebrating a decade of divine aesthetics. Multiple soundscapes, raffles, and culinary showcases await.'}
             </p>
             <button className="btn-gold">
               {t('rsvpNow')}
