@@ -165,7 +165,7 @@ export default function Reservations() {
     <div className="max-w-4xl mx-auto px-4 py-24 text-zinc-900 dark:text-white">
       <div className="text-center mb-16">
         <h1 className="text-5xl font-serif font-bold italic mb-4">Reserve Your <span className="text-gold">Moment</span></h1>
-        <p className="text-zinc-500 dark:text-white/40">Secure your table at Kiss me Store. We look forward to serving you.</p>
+        <p className="text-zinc-500 dark:text-white/60">Secure your table at Kiss me Store. We look forward to serving you.</p>
       </div>
 
       <div className="luxury-card overflow-hidden !p-0 shadow-none">
@@ -177,26 +177,26 @@ export default function Reservations() {
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">1</div>
                 <div>
                   <h4 className="font-bold text-sm mb-1 text-zinc-900 dark:text-white">Select Details</h4>
-                  <p className="text-xs text-zinc-500 dark:text-white/40">Date, time and party size</p>
+                  <p className="text-xs text-zinc-500 dark:text-white/60">Date, time and party size</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${step >= 2 ? 'bg-primary/10 text-primary' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-white/20'}`}>2</div>
                 <div>
                   <h4 className={`font-bold text-sm mb-1 ${step >= 2 ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-white/20'}`}>Guest Details</h4>
-                  <p className="text-xs text-zinc-500 dark:text-white/40">Confirm identity</p>
+                  <p className="text-xs text-zinc-500 dark:text-white/60">Confirm identity</p>
                 </div>
               </div>
               <div className="flex gap-4">
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${step === 3 ? 'bg-primary/10 text-primary' : 'bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-white/20'}`}>3</div>
                 <div>
                   <h4 className={`font-bold text-sm mb-1 ${step === 3 ? 'text-zinc-900 dark:text-white' : 'text-zinc-400 dark:text-white/20'}`}>Confirmation</h4>
-                  <p className="text-xs text-zinc-500 dark:text-white/40">Success!</p>
+                  <p className="text-xs text-zinc-500 dark:text-white/60">Success!</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-20 pt-12 border-t border-zinc-200 dark:border-white/5 text-xs text-zinc-400 dark:text-white/20 space-y-4">
+            <div className="mt-20 pt-12 border-t border-zinc-200 dark:border-white/5 text-xs text-zinc-400 dark:text-white/40 space-y-4">
               <div className="flex items-center gap-2">
                 <CheckCircle size={14} className="text-green-500" /> Instant confirmation
               </div>
@@ -216,7 +216,7 @@ export default function Reservations() {
               >
                 <div className="grid grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Date</label>
+                    <label className="text-xs font-bold text-zinc-400 dark:text-white/60 uppercase tracking-widest block text-left">Date</label>
                     <div className="relative">
                       <input 
                         type="date" 
@@ -228,7 +228,7 @@ export default function Reservations() {
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Time</label>
+                    <label className="text-xs font-bold text-zinc-400 dark:text-white/60 uppercase tracking-widest block text-left">Time</label>
                     <select 
                       value={formData.time}
                       className="w-full bg-zinc-50 dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-xl px-4 py-3 text-sm focus:border-gold outline-none appearance-none text-zinc-900 dark:text-white transition-colors"
@@ -243,7 +243,7 @@ export default function Reservations() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Number of Guests</label>
+                  <label className="text-xs font-bold text-zinc-400 dark:text-white/60 uppercase tracking-widest block text-left">Number of Guests</label>
                   <div className="flex gap-4">
                     {['1-2', '3-4', '5-6', '7+'].map(val => (
                       <button 
@@ -259,7 +259,7 @@ export default function Reservations() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">
+                  <label className="text-xs font-bold text-zinc-400 dark:text-white/60 uppercase tracking-widest block text-left">
                     Table Number {fetchingTables && <span className="animate-pulse text-gold"> (Checking...)</span>}
                   </label>
                   <select 
@@ -292,7 +292,7 @@ export default function Reservations() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-400 dark:text-white/40 uppercase tracking-widest block text-left">Table Preference</label>
+                  <label className="text-xs font-bold text-zinc-400 dark:text-white/60 uppercase tracking-widest block text-left">Table Preference</label>
                   <div className="grid grid-cols-2 gap-4">
                     <button 
                       type="button"
@@ -366,7 +366,7 @@ export default function Reservations() {
                   <CheckCircle size={48} />
                 </div>
                 <h2 className="text-3xl font-serif font-bold italic text-zinc-900 dark:text-white">Table Reserved!</h2>
-                <p className="text-zinc-500 dark:text-white/40 max-w-sm">
+                <p className="text-zinc-500 dark:text-white/60 max-w-sm">
                   We've sent a confirmation to your email. Your booking ID is <span className="text-gold font-bold">#KM-7729</span>.
                 </p>
                 <button onClick={() => setStep(1)} className="btn-primary">Done</button>

@@ -70,8 +70,8 @@ export default function Events() {
                 <Calendar size={14} className="text-gold" /> May 12, 2026
               </span>
             </div>
-            <h2 className="text-6xl font-serif font-bold italic mb-6 leading-tight max-w-3xl text-zinc-900 dark:text-white">{t('eventConcert')}</h2>
-            <p className="text-zinc-500 dark:text-white/40 text-[11px] uppercase tracking-widest font-bold leading-loose max-w-xl mb-10">
+            <h2 className="text-6xl font-serif font-bold italic mb-6 leading-tight max-w-3xl text-white">{t('eventConcert')}</h2>
+            <p className="text-white/60 text-[11px] uppercase tracking-widest font-bold leading-loose max-w-xl mb-10">
               Celebrating a decade of divine aesthetics. Multiple soundscapes, raffles, and culinary showcases await.
             </p>
             <button className="btn-gold">
@@ -109,8 +109,8 @@ export default function Events() {
                 </span>
                 <span className="text-zinc-500 dark:text-white/20 text-[9px] font-bold uppercase tracking-[0.3em]">{event.date}</span>
               </div>
-              <h3 className="text-3xl font-serif font-bold italic mb-4 text-zinc-900 dark:text-white">{event.title}</h3>
-              <p className="text-zinc-500 dark:text-white/40 text-[10px] uppercase tracking-widest font-bold leading-loose line-clamp-2 mb-8">{event.desc}</p>
+              <h3 className="text-3xl font-serif font-bold italic mb-4 text-white">{event.title}</h3>
+              <p className="text-white/60 text-[10px] uppercase tracking-widest font-bold leading-loose line-clamp-2 mb-8">{event.desc}</p>
               <div className="mt-auto flex items-center justify-between border-t border-zinc-100 dark:border-white/5 pt-6">
                 <span className="text-[10px] font-bold uppercase tracking-widest text-gold">{event.time}</span>
                 <button className="text-zinc-900 dark:text-white text-[9px] font-bold uppercase tracking-[0.3em] hover:text-gold transition-colors">
@@ -123,7 +123,7 @@ export default function Events() {
           <div className="lg:col-span-2 py-24 text-center border border-dashed border-zinc-200 dark:border-white/10 rounded-3xl">
             <Calendar size={48} className="mx-auto text-zinc-200 dark:text-white/10 mb-6" />
             <h3 className="text-xl font-serif italic text-zinc-400 dark:text-white/20 mb-2">No Upcoming Happenings Found</h3>
-            <p className="text-[10px] uppercase tracking-widest text-zinc-400 dark:text-white/10 font-bold">Please check back soon for our next major Soundscape event.</p>
+            <p className="text-[10px] uppercase tracking-widest text-white/30 font-bold">Please check back soon for our next major Soundscape event.</p>
           </div>
         )}
       </div>

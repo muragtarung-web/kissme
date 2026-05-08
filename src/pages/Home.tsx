@@ -243,8 +243,8 @@ export default function Home() {
               <Utensils size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-serif italic mb-2 text-zinc-900 dark:text-white">{settings?.features?.[0]?.title || 'Live Terminal'}</h3>
-              <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-relaxed">{settings?.features?.[0]?.description || 'Exquisite local and international cuisine prepared by master chefs.'}</p>
+              <h3 className="text-xl font-serif italic mb-2 text-white">{settings?.features?.[0]?.title || 'Live Terminal'}</h3>
+              <p className="text-xs uppercase tracking-widest text-white/60 leading-relaxed">{settings?.features?.[0]?.description || 'Exquisite local and international cuisine prepared by master chefs.'}</p>
             </div>
           </motion.div>
 
@@ -256,8 +256,8 @@ export default function Home() {
               <Music size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-serif italic mb-2 text-zinc-900 dark:text-white">{settings?.features?.[1]?.title || 'Soundscapes'}</h3>
-              <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-relaxed">{settings?.features?.[1]?.description || 'Regular acoustic nights and live band performances under the stars.'}</p>
+              <h3 className="text-xl font-serif italic mb-2 text-white">{settings?.features?.[1]?.title || 'Soundscapes'}</h3>
+              <p className="text-xs uppercase tracking-widest text-white/60 leading-relaxed">{settings?.features?.[1]?.description || 'Regular acoustic nights and live band performances under the stars.'}</p>
             </div>
           </motion.div>
 
@@ -269,8 +269,8 @@ export default function Home() {
               <Calendar size={24} />
             </div>
             <div>
-              <h3 className="text-xl font-serif italic mb-2 text-zinc-900 dark:text-white">{settings?.features?.[2]?.title || 'Private Events'}</h3>
-              <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-relaxed">{settings?.features?.[2]?.description || 'Perfect venue for weddings, birthdays, and corporate celebrations.'}</p>
+              <h3 className="text-xl font-serif italic mb-2 text-white">{settings?.features?.[2]?.title || 'Private Events'}</h3>
+              <p className="text-xs uppercase tracking-widest text-white/60 leading-relaxed">{settings?.features?.[2]?.description || 'Perfect venue for weddings, birthdays, and corporate celebrations.'}</p>
             </div>
           </motion.div>
         </div>
@@ -283,7 +283,7 @@ export default function Home() {
           <h2 className="text-4xl md:text-5xl font-serif font-bold italic mb-6 text-white text-center">
             {settings?.membersTitle || 'Our Growing Community'}
           </h2>
-          <p className="max-w-xl text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mx-auto">
+          <p className="max-w-xl text-xs uppercase tracking-widest text-white/60 leading-loose mx-auto">
             Join the circle of professionals, artists, and enthusiasts who call Kiss me Store their second home.
           </p>
         </div>
@@ -349,7 +349,7 @@ export default function Home() {
             <div className="relative z-10">
               <span className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold mb-6 block">Unlock More Experience</span>
               <h2 className="text-5xl font-serif font-bold italic mb-6 text-white">{settings?.ctaTitle || 'Join the Kiss me Store Circle'}</h2>
-              <p className="max-w-xl mx-auto text-[11px] uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mb-10">
+              <p className="max-w-xl mx-auto text-[11px] uppercase tracking-widest text-white/60 leading-loose mb-10">
                 {settings?.ctaDescription || 'Register as a member to earn points on every visit, unlock exclusive seasonal menus, and gain priority access to our most sought-after events.'}
               </p>
               <div className="flex justify-center gap-6">
@@ -412,7 +412,7 @@ export default function Home() {
                   <h4 className="text-xl font-serif italic text-white group-hover:text-gold transition-colors">{item.name}</h4>
                   <p className="text-sm font-bold text-gold whitespace-nowrap">₱{item.price}</p>
                 </div>
-                <p className="text-[9px] uppercase tracking-widest text-zinc-500 dark:text-white/40 font-bold leading-relaxed line-clamp-2 mt-auto">
+                <p className="text-[9px] uppercase tracking-widest text-white/70 font-bold leading-relaxed line-clamp-2 mt-auto">
                   {item.description}
                 </p>
                 <div className="mt-4 pt-4 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
@@ -421,7 +421,7 @@ export default function Home() {
                       e.stopPropagation();
                       addToCart(item, e);
                     }}
-                    className="w-full py-2 bg-white/5 hover:bg-gold hover:text-black border border-white/10 hover:border-gold rounded text-[9px] uppercase font-bold tracking-widest transition-all"
+                    className="w-full py-2 bg-white/5 hover:bg-gold hover:text-black border border-gold/40 hover:border-gold rounded text-[10px] uppercase font-bold tracking-widest transition-all text-white"
                   >
                     Quick Add
                   </button>
@@ -593,8 +593,8 @@ export default function Home() {
                    </span>
                    <span className="text-zinc-400 dark:text-white/20 text-[9px] font-bold uppercase tracking-[0.3em]">{event.date}</span>
                 </div>
-                <h3 className="text-2xl font-serif font-bold italic mb-4 text-zinc-900 dark:text-white leading-tight">{event.title}</h3>
-                <p className="text-zinc-500 dark:text-white/40 text-[10px] uppercase tracking-widest font-bold leading-loose line-clamp-2 mb-8">{event.desc}</p>
+                <h3 className="text-2xl font-serif font-bold italic mb-4 text-white leading-tight">{event.title}</h3>
+                <p className="text-white/60 text-[10px] uppercase tracking-widest font-bold leading-loose line-clamp-2 mb-8">{event.desc}</p>
                 <div className="mt-auto w-full pt-6 border-t border-zinc-100 dark:border-white/5 flex items-center justify-between">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gold">{event.time}</span>
                   <Link to="/events" className="text-zinc-900 dark:text-white text-[9px] font-bold uppercase tracking-[0.3em] hover:text-gold transition-colors flex items-center gap-2 group/btn">
@@ -646,7 +646,7 @@ export default function Home() {
               <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-3 block">Guest Gallery</span>
               <h2 className="text-5xl font-serif font-bold italic">{settings?.momentsTitle || 'Happening Moments'} <span className="text-zinc-200 dark:text-white/20">Moments</span></h2>
             </div>
-            <p className="max-w-md text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose">
+            <p className="max-w-md text-xs uppercase tracking-widest text-white/60 leading-loose">
               Captured experiences from our community. Join the conversation and share your visit with us.
             </p>
           </div>

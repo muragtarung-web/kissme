@@ -152,7 +152,7 @@ export default function Menu() {
             <li>
               <button 
                 onClick={() => setSelectedCategory('all')}
-                className={`text-sm font-bold uppercase tracking-widest text-left w-full transition-all ${selectedCategory === 'all' ? 'text-gold' : 'text-zinc-400 dark:text-white/20 hover:text-zinc-900 dark:hover:text-white'}`}
+                className={`text-sm font-bold uppercase tracking-widest text-left w-full transition-all ${selectedCategory === 'all' ? 'text-gold' : 'text-white/40 hover:text-white'}`}
               >
                 {t('allEntities')}
               </button>
@@ -161,7 +161,7 @@ export default function Menu() {
               <li key={cat.id}>
                 <button 
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`text-sm font-bold uppercase tracking-widest text-left w-full transition-all ${selectedCategory === cat.id ? 'text-gold' : 'text-zinc-400 dark:text-white/20 hover:text-zinc-900 dark:hover:text-white'}`}
+                  className={`text-sm font-bold uppercase tracking-widest text-left w-full transition-all ${selectedCategory === cat.id ? 'text-gold' : 'text-white/40 hover:text-white'}`}
                 >
                   {cat.name}
                 </button>
@@ -212,12 +212,12 @@ export default function Menu() {
                     </div>
                     <div className="flex-grow space-y-2">
                        <p className="text-[10px] uppercase tracking-widest text-gold font-bold">₱{p.price}</p>
-                       <h3 className="text-2xl font-serif italic text-zinc-900 dark:text-white">{p.name}</h3>
-                       <p className="text-xs text-zinc-500 dark:text-white/40 leading-relaxed font-bold uppercase tracking-widest mt-2">{p.description}</p>
+                       <h3 className="text-2xl font-serif italic text-white drop-shadow-md">{p.name}</h3>
+                       <p className="text-xs text-white/70 leading-relaxed font-bold uppercase tracking-widest mt-2">{p.description}</p>
                     </div>
                     <button 
                       onClick={(e) => addToCart(p, e)}
-                      className="mt-8 py-4 border border-zinc-200 dark:border-white/10 hover:border-zinc-900 dark:hover:border-white transition-all text-[10px] font-bold uppercase tracking-widest text-zinc-900 dark:text-white"
+                      className="mt-8 py-4 border border-gold/40 hover:bg-gold hover:text-black transition-all text-[10px] font-bold uppercase tracking-widest text-white px-8"
                     >
                       {t('addToCart') || 'Add to Order'}
                     </button>
