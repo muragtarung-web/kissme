@@ -56,7 +56,7 @@ export default function Events() {
           <img 
             src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000" 
             alt="Featured event" 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000 grayscale group-hover:grayscale-0"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000"
             referrerPolicy="no-referrer"
             onError={(e) => {
               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000';
@@ -91,7 +91,7 @@ export default function Events() {
             onClick={() => setSelectedEvent(event)}
             className="bg-zinc-50 dark:bg-[#121212] border border-zinc-100 dark:border-white/5 flex flex-col md:flex-row overflow-hidden group shadow-none transition-colors cursor-pointer"
           >
-            <div className="md:w-2/5 aspect-[4/3] md:aspect-auto overflow-hidden grayscale group-hover:grayscale-0 transition-all duration-700 bg-zinc-200 dark:bg-white/5">
+            <div className="md:w-2/5 aspect-[4/3] md:aspect-auto overflow-hidden transition-all duration-700 bg-zinc-200 dark:bg-white/5">
               <img 
                 src={event.img || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000'} 
                 alt={event.title} 
@@ -158,7 +158,7 @@ export default function Events() {
                 <img 
                   src={selectedEvent.img || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000'} 
                   alt={selectedEvent.title} 
-                  className="w-full h-full object-cover grayscale transition-all duration-1000 hover:grayscale-0"
+                  className="w-full h-full object-cover transition-all duration-1000"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000';
                   }}

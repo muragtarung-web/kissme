@@ -301,7 +301,7 @@ export default function Home() {
               >
                 <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-white/5 group-hover:border-gold/50 transition-all duration-500 bg-zinc-900 shadow-xl group-hover:scale-110">
                   {member.photoURL ? (
-                    <img src={member.photoURL} alt={member.displayName} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                    <img src={member.photoURL} alt={member.displayName} className="w-full h-full object-cover transition-all" referrerPolicy="no-referrer" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-white font-serif italic text-lg">
                       {member.displayName?.charAt(0) || 'U'}
@@ -391,7 +391,7 @@ export default function Home() {
                 setCurrentImageIndex(0);
               }}
             >
-              <div className="aspect-square overflow-hidden rounded-xl mb-6 grayscale group-hover:grayscale-0 transition-all duration-700 bg-zinc-900 border border-white/10 relative">
+              <div className="aspect-square overflow-hidden rounded-xl mb-6 transition-all duration-700 bg-zinc-900 border border-white/10 relative">
                 <img 
                   src={item.image} 
                   alt={item.name} 
@@ -577,7 +577,7 @@ export default function Home() {
                 <img 
                   src={event.img || 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024'} 
                   alt={event.title} 
-                  className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024';
                   }}
@@ -616,7 +616,7 @@ export default function Home() {
                   <img 
                     src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&q=80&w=1024" 
                     alt="Coming Soon" 
-                    className="w-full h-full object-cover grayscale opacity-50"
+                    className="w-full h-full object-cover opacity-50"
                   />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-gold uppercase tracking-[0.5em] text-[10px] font-bold border border-gold/40 px-6 py-2 bg-black/40 backdrop-blur-sm">Coming Soon</span>
@@ -664,7 +664,7 @@ export default function Home() {
                 <img 
                   src={moment.imageUrl || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=1000'} 
                   alt={moment.title} 
-                  className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-110"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=1000';
                   }}
@@ -765,7 +765,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="md:w-1/2 w-full aspect-video rounded-3xl overflow-hidden grayscale contrast-125 opacity-70 border border-white/10">
+          <div className="md:w-1/2 w-full aspect-video rounded-3xl overflow-hidden contrast-125 opacity-70 border border-white/10">
             <iframe 
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15783.332066827376!2d124.7470634!3d8.5158671!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x32ffbd23c10a4023%3A0x6d8f5c9e4367c30a!2sTagoloan%2C%20Misamis%20Oriental!5e0!3m2!1sen!2sph!4v1714350000000!5m2!1sen!2sph"
               className="w-full h-full border-0"

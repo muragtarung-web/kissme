@@ -83,7 +83,7 @@ export default function Login() {
           onClick={handleGoogleLogin}
           className="w-full btn-gold !text-lg py-4 flex items-center justify-center gap-4 group"
         >
-          <img src="https://www.google.com/favicon.ico" alt="google" className="w-6 h-6 grayscale group-hover:grayscale-0 transition-all" />
+          <img src="https://www.google.com/favicon.ico" alt="google" className="w-6 h-6 transition-all" />
           Continue with Google
         </button>
 

@@ -57,7 +57,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       await addDoc(collection(db, 'inAppNotifications'), {
         userId: auth.currentUser.uid,
         title: 'Order Received',
-        message: `Your order #${orderRef.id.slice(-6)} has been received and is being processed by our kitchen.`,
+        message: `Your order #${orderRef.id.slice(-6)} (₱${total}) has been received and is being processed by our kitchen.`,
         read: false,
         createdAt: new Date(),
         type: 'order',

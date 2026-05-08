@@ -190,7 +190,7 @@ export default function Menu() {
                     exit={{ opacity: 0 }}
                     className="flex flex-col group text-left"
                   >
-                    <div className="aspect-[4/5] rounded-xl overflow-hidden mb-8 relative grayscale group-hover:grayscale-0 transition-all duration-700 bg-zinc-100 dark:bg-white/5 cursor-zoom-in">
+                    <div className="aspect-[4/5] rounded-xl overflow-hidden mb-8 relative transition-all duration-700 bg-zinc-100 dark:bg-white/5 cursor-zoom-in">
                       <img 
                         src={p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'} 
                         alt={p.name} 

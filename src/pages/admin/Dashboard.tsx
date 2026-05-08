@@ -520,23 +520,23 @@ export default function AdminDashboard() {
         if (order && order.customerId) {
           const notifRef = doc(collection(db, 'inAppNotifications'));
           let title = 'Order Update';
-          let message = `Order #${id.slice(-6)} status: ${status.toUpperCase()}.`;
+          let message = `Order #${id.slice(-6)} (₱${order?.total || 0}) status: ${status.toUpperCase()}.`;
 
           if (status === 'confirmed') {
             title = 'Order Confirmed ✅';
-            message = `Your order #${id.slice(-6)} has been accepted and confirmed by the staff.`;
+            message = `Your order #${id.slice(-6)} (₱${order?.total || 0}) has been accepted and confirmed by the staff.`;
           } else if (status === 'cooking') {
             title = 'In the Kitchen 🍳';
-            message = `Chef is now preparing your items for order #${id.slice(-6)}! Get ready!`;
+            message = `Chef is now preparing your items for order #${id.slice(-6)} (₱${order?.total || 0})! Get ready!`;
           } else if (status === 'ready') {
             title = 'Order Ready! 🍱';
-            message = `Your tray for order #${id.slice(-6)} is now ready for pickup or service.`;
+            message = `Your tray for order #${id.slice(-6)} (₱${order?.total || 0}) is now ready for pickup or service.`;
           } else if (status === 'delivered' || status === 'completed') {
             title = 'Order Served ✨';
-            message = `Enjoy your meal! Order #${id.slice(-6)} has been marked as fulfilled.`;
+            message = `Enjoy your meal! Order #${id.slice(-6)} (₱${order?.total || 0}) has been marked as fulfilled.`;
           } else if (status === 'cancelled') {
             title = 'Order Cancelled 🔴';
-            message = `Order #${id.slice(-6)} could not be fulfilled and has been cancelled.`;
+            message = `Order #${id.slice(-6)} (₱${order?.total || 0}) could not be fulfilled and has been cancelled.`;
           }
 
           batch.set(notifRef, {
@@ -598,29 +598,29 @@ export default function AdminDashboard() {
 
       if (order && order.customerId) {
         let title = 'Order Tracking Update';
-        let message = `Order #${id.slice(-6)} status updated to ${status.toUpperCase()}.`;
+        let message = `Order #${id.slice(-6)} (₱${order?.total || 0}) status updated to ${status.toUpperCase()}.`;
 
         if (status === 'confirmed') {
           title = 'Order Confirmed ✅';
-          message = `Great news! Order #${id.slice(-6)} has been verified and confirmed.`;
+          message = `Great news! Order #${id.slice(-6)} (₱${order?.total || 0}) has been verified and confirmed.`;
         } else if (status === 'cooking') {
           title = 'Kitchen is Fired Up! 🔥';
-          message = `Our team is now busy preparing your order #${id.slice(-6)}. It won't be long!`;
+          message = `Our team is now busy preparing your order #${id.slice(-6)} (₱${order?.total || 0}). It won't be long!`;
         } else if (status === 'ready') {
           title = 'Order is Ready! 🛎️';
-          message = `Your order #${id.slice(-6)} is piping hot and ready for you.`;
+          message = `Your order #${id.slice(-6)} (₱${order?.total || 0}) is piping hot and ready for you.`;
         } else if (status === 'delivery') {
           title = 'Order Out for Delivery 🛵';
-          message = `Our courier is on the way with your order #${id.slice(-6)}!`;
+          message = `Our courier is on the way with your order #${id.slice(-6)} (₱${order?.total || 0})!`;
         } else if (status === 'delivered') {
           title = 'Order Delivered 🏠';
-          message = `Your order #${id.slice(-6)} has been successfully delivered. Satisfaction guaranteed!`;
+          message = `Your order #${id.slice(-6)} (₱${order?.total || 0}) has been successfully delivered. Satisfaction guaranteed!`;
         } else if (status === 'completed') {
           title = 'Transaction Completed ✨';
-          message = `Order #${id.slice(-6)} is now officially complete. Thank you for choosing Kiss Me!`;
+          message = `Order #${id.slice(-6)} (₱${order?.total || 0}) is now officially complete. Thank you for choosing Kiss Me!`;
         } else if (status === 'cancelled') {
           title = 'Order Cancelled 🔴';
-          message = `We regret to inform you that order #${id.slice(-6)} has been cancelled.`;
+          message = `We regret to inform you that order #${id.slice(-6)} (₱${order?.total || 0}) has been cancelled.`;
         }
 
         await addDoc(collection(db, 'inAppNotifications'), {
@@ -1797,7 +1797,7 @@ export default function AdminDashboard() {
                       onClick={() => setExpandedEventId(expandedEventId === event.id ? null : event.id)}
                     >
                       <div className="flex items-center gap-8">
-                         <div className={`w-24 h-16 rounded overflow-hidden transition-all border border-white/5 text-white bg-zinc-900 ${expandedEventId === event.id ? 'grayscale-0' : 'grayscale group-hover:grayscale-0'}`}>
+                          <div className={`w-24 h-16 rounded overflow-hidden transition-all border border-white/5 text-white bg-zinc-900`}>
                            <img 
                             src={event.img || 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&q=80&w=2000'} 
                             className="w-full h-full object-cover" 
@@ -2102,7 +2102,7 @@ export default function AdminDashboard() {
                         <div className="w-full aspect-square rounded-lg overflow-hidden bg-white/5">
                            <img 
                             src={p.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300'} 
-                            className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" 
+                            className="w-full h-full object-cover transition-all" 
                             onError={(e) => {
                               (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=300';
                             }}
@@ -2195,7 +2195,7 @@ export default function AdminDashboard() {
                   <button 
                     disabled={posCart.length === 0}
                     onClick={handleCheckout}
-                    className="w-full py-4 bg-gold text-black font-bold uppercase tracking-[0.4em] text-[11px] hover:bg-white transition-all shadow-xl disabled:opacity-50 disabled:grayscale"
+                    className="w-full py-4 bg-gold text-black font-bold uppercase tracking-[0.4em] text-[11px] hover:bg-white transition-all shadow-xl disabled:opacity-50"
                   >
                     Lock & Settle
                   </button>
@@ -2229,7 +2229,7 @@ export default function AdminDashboard() {
                 {moments.map(moment => (
                   <div key={moment.id} className="bg-[#121212] border border-white/5 rounded-2xl overflow-hidden group shadow-sm transition-all hover:shadow-md">
                     <div className="aspect-[4/5] relative">
-                      <img src={moment.imageUrl} className="w-full h-full object-cover grayscale transition-all duration-700 group-hover:grayscale-0" />
+                      <img src={moment.imageUrl} className="w-full h-full object-cover transition-all duration-700" />
                       <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent opacity-60"></div>
                       <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
                         <button onClick={() => { setEditingMoment(moment); setShowMomentModal(true); }} className="p-2 bg-black/60 text-white rounded-full hover:bg-gold transition-colors"><Edit size={12}/></button>
