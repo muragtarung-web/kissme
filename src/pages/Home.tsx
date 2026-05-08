@@ -21,6 +21,7 @@ export default function Home() {
   const [featuredMoments, setFeaturedMoments] = useState<Moment[]>([]);
   const [events, setEvents] = useState<AppEvent[]>([]);
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [joinedMembers, setJoinedMembers] = useState<any[]>([]);
   const [selectedProductForModal, setSelectedProductForModal] = useState<Product | null>(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
@@ -49,7 +50,7 @@ export default function Home() {
   useEffect(() => {
     showLoading('Synchronizing Kiss Me experience...');
     let loadedCount = 0;
-    const totalRequests = 4;
+    const totalRequests = 5;
 
     const checkLoading = () => {
       loadedCount++;
@@ -77,6 +78,10 @@ export default function Home() {
         const allProds = snap.docs.map(d => ({ id: d.id, ...d.data() } as Product));
         // Show only available products, prioritized by 'featured' status
         setFeaturedProducts(allProds.filter(p => p.available).sort((a, b) => (b.featured ? 1 : 0) - (a.featured ? 1 : 0)));
+        checkLoading();
+      }, () => checkLoading()),
+      onSnapshot(query(collection(db, 'users'), limit(20), orderBy('createdAt', 'desc')), (snap) => {
+        setJoinedMembers(snap.docs.map(d => ({ id: d.id, ...d.data() })));
         checkLoading();
       }, () => checkLoading())
     ];
@@ -268,6 +273,69 @@ export default function Home() {
               <p className="text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-relaxed">{settings?.features?.[2]?.description || 'Perfect venue for weddings, birthdays, and corporate celebrations.'}</p>
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Community Section */}
+      <section className="max-w-7xl mx-auto px-6 py-12">
+        <div className="flex flex-col items-center text-center mb-12">
+          <span className="text-[10px] uppercase tracking-[0.6em] text-gold font-bold mb-4">The Collective</span>
+          <h2 className="text-4xl md:text-5xl font-serif font-bold italic mb-6 text-white text-center">
+            {settings?.membersTitle || 'Our Growing Community'}
+          </h2>
+          <p className="max-w-xl text-xs uppercase tracking-widest text-zinc-500 dark:text-white/40 leading-loose mx-auto">
+            Join the circle of professionals, artists, and enthusiasts who call Kiss me Store their second home.
+          </p>
+        </div>
+
+        <div className="relative">
+          <div className="flex flex-wrap justify-center gap-4 md:gap-8 items-center max-w-4xl mx-auto">
+            {joinedMembers.map((member, i) => (
+              <motion.div
+                key={member.id}
+                initial={{ opacity: 0, scale: 0.5 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: i * 0.05, type: 'spring', stiffness: 300, damping: 20 }}
+                viewport={{ once: true }}
+                className="relative group"
+              >
+                <div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden border-2 border-white/5 group-hover:border-gold/50 transition-all duration-500 bg-zinc-900 shadow-xl group-hover:scale-110">
+                  {member.photoURL ? (
+                    <img src={member.photoURL} alt={member.displayName} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all" referrerPolicy="no-referrer" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-zinc-800 text-white font-serif italic text-lg">
+                      {member.displayName?.charAt(0) || 'U'}
+                    </div>
+                  )}
+                </div>
+                
+                {/* Tooltip */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-2 bg-black border border-white/10 rounded text-[10px] text-white font-bold tracking-widest uppercase whitespace-nowrap opacity-0 group-hover:opacity-100 transition-all pointer-events-none z-50 shadow-2xl scale-90 group-hover:scale-100">
+                  {member.displayName}
+                </div>
+              </motion.div>
+            ))}
+            
+            {joinedMembers.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ delay: (joinedMembers.length + 1) * 0.05 }}
+                viewport={{ once: true }}
+                className="flex items-center gap-3 pl-4 md:pl-8 border-l border-white/10 ml-4 h-12 md:h-16"
+              >
+                <div className="flex flex-col">
+                  <span className="text-xl md:text-2xl font-serif text-gold font-bold italic leading-none">{joinedMembers.length}+</span>
+                  <span className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold">Joined</span>
+                </div>
+                {!user && (
+                  <Link to="/login" className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-dashed border-gold flex items-center justify-center text-gold hover:bg-gold hover:text-black transition-all group">
+                    <ChevronRight size={20} className="group-hover:translate-x-0.5 transition-transform" />
+                  </Link>
+                )}
+              </motion.div>
+            )}
+          </div>
         </div>
       </section>
 

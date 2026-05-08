@@ -126,6 +126,7 @@ export interface SiteSettings {
   visitTitle?: string;
   ctaTitle?: string;
   ctaDescription?: string;
+  membersTitle?: string;
   features: {
     title: string;
     description: string;

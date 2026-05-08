@@ -101,6 +101,7 @@
         "visitTitle": { "type": "string" },
         "ctaTitle": { "type": "string" },
         "ctaDescription": { "type": "string" },
+        "membersTitle": { "type": "string" },
         "features": { "type": "array" }
       }
     },

@@ -741,6 +741,7 @@ export default function AdminDashboard() {
       momentsTitle: formData.get('momentsTitle') as string,
       membershipTitle: formData.get('membershipTitle') as string,
       visitTitle: formData.get('visitTitle') as string,
+      membersTitle: formData.get('membersTitle') as string,
       ctaTitle: formData.get('ctaTitle') as string,
       ctaDescription: formData.get('ctaDescription') as string,
       features: [
@@ -2383,6 +2384,10 @@ export default function AdminDashboard() {
                       <div className="space-y-1">
                         <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Visit Section Title</label>
                         <input name="visitTitle" defaultValue={siteSettings?.visitTitle} placeholder="e.g. Find Us" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Community Section Title</label>
+                        <input name="membersTitle" defaultValue={siteSettings?.membersTitle} placeholder="e.g. Our Growing Community" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
                       </div>
                       <div className="space-y-1 md:col-span-2">
                         <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Guest CTA Title</label>
