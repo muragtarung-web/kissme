@@ -384,23 +384,23 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-5xl aspect-video bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row shadow-gold/10 border border-white/5"
+              className="relative w-full max-w-5xl md:h-[80vh] bg-black rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row shadow-gold/10 border border-white/5"
             >
               <button 
                 onClick={() => setSelectedProductForModal(null)}
-                className="absolute top-6 right-6 z-10 p-3 bg-black/50 text-white rounded-full hover:bg-white hover:text-black transition-all border border-white/10"
+                className="absolute top-6 right-6 z-20 p-3 bg-black/50 text-white rounded-full hover:bg-white hover:text-black transition-all border border-white/10"
               >
                 <X size={20} />
               </button>
 
               {/* Main Display */}
-              <div className="flex-grow relative overflow-hidden bg-zinc-900 group">
+              <div className="flex-grow relative overflow-hidden bg-zinc-900 group min-h-[300px] md:min-h-0">
                 <img 
                   src={(selectedProductForModal.images && selectedProductForModal.images.length > 0) 
                     ? selectedProductForModal.images[currentImageIndex] 
                     : selectedProductForModal.image || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600'
                   } 
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-contain p-4"
                   referrerPolicy="no-referrer"
                 />
                 
@@ -411,7 +411,7 @@ export default function Home() {
                         e.stopPropagation();
                         setCurrentImageIndex(prev => prev > 0 ? prev - 1 : selectedProductForModal.images!.length - 1);
                       }}
-                      className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black"
+                      className="absolute left-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black z-10"
                     >
                       <ChevronLeft size={24} />
                     </button>
@@ -420,7 +420,7 @@ export default function Home() {
                         e.stopPropagation();
                         setCurrentImageIndex(prev => prev < selectedProductForModal.images!.length - 1 ? prev + 1 : 0);
                       }}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 p-4 bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-all hover:bg-gold hover:text-black z-10"
                     >
                       <ChevronRight size={24} />
                     </button>
@@ -429,7 +429,7 @@ export default function Home() {
               </div>
 
               {/* Info Sidebar */}
-              <div className="w-full md:w-80 bg-[#0D0D0D] p-8 flex flex-col border-l border-white/5">
+              <div className="w-full md:w-96 bg-[#0D0D0D] p-8 flex flex-col border-l border-white/5 overflow-y-auto max-h-[50vh] md:max-h-none">
                 <div className="flex-grow">
                   <span className="text-[10px] uppercase tracking-[0.4em] text-gold font-bold mb-4 block">Product Insight</span>
                   <h2 className="text-3xl font-serif italic text-white mb-4 leading-tight">{selectedProductForModal.name}</h2>
