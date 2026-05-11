@@ -9,6 +9,7 @@ import { db } from '../lib/firebase';
 import { collection, query, getDocs, limit, orderBy, onSnapshot } from 'firebase/firestore';
 import { SiteSettings, Moment, Event as AppEvent, Product } from '../types';
 import { useLoading } from '../hooks/useLoading';
+import FloatingLogo from '../components/FloatingLogo';
 import toast from 'react-hot-toast';
 
 export default function Home() {
@@ -204,28 +205,39 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-left">
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8 }}
-            className="max-w-3xl"
-          >
-            <h1 className="text-7xl md:text-9xl font-serif font-bold leading-[0.9] mb-6 text-white tracking-tighter">
-              {settings?.heroTitle || t('heroTitle')} <br />
-              <span className="text-gold italic font-light">{settings?.heroSubtitle || t('heroAesthetics')}</span>
-            </h1>
-            <p className="text-xs uppercase tracking-[0.5em] text-white/40 mb-10 max-w-lg leading-loose font-bold">
-              {settings?.heroTagline || t('heroTagline')}
-            </p>
-            <div className="flex flex-wrap gap-6">
-              <Link to="/menu" className="btn-primary py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold">
-                {t('exploreMenu')}
-              </Link>
-              <Link to="/reservations" className="bg-transparent border border-white/20 hover:border-gold hover:text-gold text-white py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold transition-all">
-                {t('bookTable')}
-              </Link>
-            </div>
-          </motion.div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="max-w-3xl"
+            >
+              <h1 className="text-7xl md:text-9xl font-serif font-bold leading-[0.9] mb-6 text-white tracking-tighter">
+                {settings?.heroTitle || t('heroTitle')} <br />
+                <span className="text-gold italic font-light">{settings?.heroSubtitle || t('heroAesthetics')}</span>
+              </h1>
+              <p className="text-xs uppercase tracking-[0.5em] text-white/40 mb-10 max-w-lg leading-loose font-bold">
+                {settings?.heroTagline || t('heroTagline')}
+              </p>
+              <div className="flex flex-wrap gap-6">
+                <Link to="/menu" className="btn-primary py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold">
+                  {t('exploreMenu')}
+                </Link>
+                <Link to="/reservations" className="bg-transparent border border-white/20 hover:border-gold hover:text-gold text-white py-4 px-10 text-[10px] tracking-[0.2em] uppercase font-bold transition-all">
+                  {t('bookTable')}
+                </Link>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 1, delay: 0.2 }}
+              className="hidden md:flex justify-end"
+            >
+              <FloatingLogo src={settings?.officialLogo} size="xl" className="mr-0 lg:mr-12" />
+            </motion.div>
+          </div>
         </div>
       </section>
 
