@@ -60,6 +60,7 @@ export default function AdminDashboard() {
   const [editingMoment, setEditingMoment] = useState<Moment | null>(null);
   const [momentImage, setMomentImage] = useState<string>('');
   const [heroImage, setHeroImage] = useState<string>('');
+  const [logoImage, setLogoImage] = useState<string>('');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
 
@@ -751,6 +752,7 @@ export default function AdminDashboard() {
       featuredEventTitle: formData.get('featuredEventTitle') as string,
       featuredEventDescription: formData.get('featuredEventDescription') as string,
       featuredEventImage: formData.get('featuredEventImage') as string,
+      officialLogo: logoImage || formData.get('officialLogo') as string || siteSettings?.officialLogo || '',
       features: [
         { title: formData.get('feature_0_title') as string, description: formData.get('feature_0_desc') as string, icon: 'Utensils' },
         { title: formData.get('feature_1_title') as string, description: formData.get('feature_1_desc') as string, icon: 'Music' },
@@ -2398,6 +2400,15 @@ export default function AdminDashboard() {
                       <div className="space-y-1 md:col-span-2">
                         <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Event Image URL</label>
                         <input name="featuredEventImage" defaultValue={siteSettings?.featuredEventImage} placeholder="https://images.unsplash.com/..." className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-4 md:col-span-2 border-t border-white/5 pt-6">
+                        <label className="text-[10px] uppercase tracking-widest text-gold font-bold">Official Store Identity (Neon Logo)</label>
+                        <input name="officialLogo" defaultValue={siteSettings?.officialLogo} placeholder="Logo Image URL" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                        <ImageUploadField 
+                          label="Upload Official Neon Logo" 
+                          currentImage={logoImage || siteSettings?.officialLogo} 
+                          onUpload={(b64) => setLogoImage(b64)} 
+                        />
                       </div>
                     </div>
                   </div>

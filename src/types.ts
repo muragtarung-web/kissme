@@ -134,6 +134,7 @@ export interface SiteSettings {
   featuredEventTitle?: string;
   featuredEventDescription?: string;
   featuredEventImage?: string;
+  officialLogo?: string;
   features: {
     title: string;
     description: string;

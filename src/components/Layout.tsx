@@ -12,6 +12,7 @@ import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, limit, w
 import { InAppNotification, SiteSettings } from '../types';
 import toast from 'react-hot-toast';
 import CartDrawer from './CartDrawer';
+import FloatingLogo from './FloatingLogo';
 
 const LogoK = ({ size = 18 }: { size?: number }) => (
   <div 
@@ -159,9 +160,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
       <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 dark:bg-[#0A0A0A]/95 backdrop-blur-xl border-b border-zinc-200 dark:border-white/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <Link to="/" className="flex flex-col">
-            <span className="text-2xl font-serif font-bold text-gold tracking-tight leading-none uppercase">Kiss me Store</span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 font-bold mt-1">Food Corner</span>
+          <Link to="/" className="flex items-center gap-4 group">
+            <FloatingLogo src={settings?.officialLogo} size="sm" className="block" />
+            <div className="flex flex-col">
+              <span className="text-2xl font-serif font-bold text-gold tracking-tight leading-none uppercase group-hover:text-gold/80 transition-colors">Kiss me Store</span>
+              <span className="text-[10px] uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400 font-bold mt-1">Food Corner</span>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-8 text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-800 dark:text-zinc-100">
