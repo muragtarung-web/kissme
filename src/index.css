@@ -45,3 +45,16 @@
 .bg-glow-gold {
   @apply absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_80%_70%,#C5A059_0%,transparent_50%)] opacity-10 pointer-events-none;
 }
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+@keyframes neon-pulse {
+  0%, 100% { opacity: 0.8; filter: blur(40px) brightness(1); }
+  50% { opacity: 1; filter: blur(50px) brightness(1.2); }
+}
+
+.animate-neon-pulse {
+  animation: neon-pulse 3s ease-in-out infinite;
+}

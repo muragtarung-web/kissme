@@ -25,6 +25,8 @@ export default function Events() {
       if (snap.exists()) {
         setSettings({ id: snap.id, ...snap.data() } as SiteSettings);
       }
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'settings/main');
     });
 
     const unsubEvents = onSnapshot(query(collection(db, 'events'), orderBy('date')), (snap) => {
@@ -46,8 +48,15 @@ export default function Events() {
   return (
     <div className="max-w-7xl mx-auto px-6 py-24 relative overflow-hidden text-zinc-900 dark:text-white min-h-screen">
       <div className="text-left mb-24 px-2">
-        <span className="text-gold uppercase tracking-[0.4em] text-[10px] font-bold mb-4 block">Current Happenings</span>
-        <h1 className="text-7xl font-serif font-bold italic leading-none">Terminal <span className="text-zinc-200 dark:text-white/20">Events</span></h1>
+        <span className="text-gold uppercase tracking-[0.4em] text-[10px] font-bold mb-4 block">
+          {settings?.eventsPageTagline || 'Current Happenings'}
+        </span>
+        <h1 className="text-7xl font-serif font-bold italic leading-none">
+          {settings?.eventsPageTitle?.split(' ')[0] || 'Terminal'}{' '}
+          <span className="text-zinc-200 dark:text-white/20">
+            {settings?.eventsPageTitle?.split(' ').slice(1).join(' ') || 'Events'}
+          </span>
+        </h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">

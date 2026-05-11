@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import React from 'react';
 import { db, auth } from '../../lib/firebase';
-import { collection, query, getDocs, limit, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, arrayUnion, writeBatch } from 'firebase/firestore';
+import { collection, query, getDocs, limit, orderBy, onSnapshot, addDoc, updateDoc, deleteDoc, doc, arrayUnion, writeBatch, setDoc } from 'firebase/firestore';
 import { motion, AnimatePresence } from 'motion/react';
 import { 
   TrendingUp, Users, ShoppingCart, AlertCircle, 
@@ -96,9 +96,9 @@ export default function AdminDashboard() {
       onSnapshot(query(collection(db, 'moments'), orderBy('date', 'desc')), (snap) => {
         setMoments(snap.docs.map(d => ({ id: d.id, ...d.data() } as Moment)));
       }),
-      onSnapshot(collection(db, 'settings'), (snap) => {
-        if (!snap.empty) {
-          setSiteSettings({ id: snap.docs[0].id, ...snap.docs[0].data() } as SiteSettings);
+      onSnapshot(doc(db, 'settings', 'main'), (snap) => {
+        if (snap.exists()) {
+          setSiteSettings({ id: snap.id, ...snap.data() } as SiteSettings);
         }
       }),
       onSnapshot(query(collection(db, 'reminders'), orderBy('scheduledAt', 'desc')), (snap) => {
@@ -744,6 +744,8 @@ export default function AdminDashboard() {
       membersTitle: formData.get('membersTitle') as string,
       ctaTitle: formData.get('ctaTitle') as string,
       ctaDescription: formData.get('ctaDescription') as string,
+      eventsPageTagline: formData.get('eventsPageTagline') as string,
+      eventsPageTitle: formData.get('eventsPageTitle') as string,
       featuredEventBadge: formData.get('featuredEventBadge') as string,
       featuredEventDate: formData.get('featuredEventDate') as string,
       featuredEventTitle: formData.get('featuredEventTitle') as string,
@@ -757,15 +759,10 @@ export default function AdminDashboard() {
     };
 
     try {
-      if (siteSettings) {
-        await updateDoc(doc(db, 'settings', siteSettings.id), settingsData);
-        toast.success('Site settings updated');
-      } else {
-        await addDoc(collection(db, 'settings'), settingsData);
-        toast.success('Site settings initialized');
-      }
+      await setDoc(doc(db, 'settings', 'main'), settingsData);
+      toast.success('Site settings updated');
     } catch (error) {
-      handleFirestoreError(error, siteSettings ? OperationType.UPDATE : OperationType.CREATE, 'settings');
+      handleFirestoreError(error, OperationType.UPDATE, 'settings/main');
     } finally {
       hideLoading();
     }
@@ -2361,6 +2358,21 @@ export default function AdminDashboard() {
                       currentImage={heroImage || siteSettings?.heroImage} 
                       onUpload={(b64) => setHeroImage(b64)} 
                     />
+                  </div>
+
+                  <div className="space-y-6 pt-6 border-t border-white/5 text-left">
+                    <h3 className="text-xl font-serif italic border-b border-white/5 pb-4 text-white">Happenings Page Configuration</h3>
+                    <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Configure the main header of the events page</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Page Tagline</label>
+                        <input name="eventsPageTagline" defaultValue={siteSettings?.eventsPageTagline} placeholder="Current Happenings" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Page Title</label>
+                        <input name="eventsPageTitle" defaultValue={siteSettings?.eventsPageTitle} placeholder="Terminal Events" className="w-full bg-white/5 border border-white/10 p-3 rounded outline-none focus:border-gold text-white" />
+                      </div>
+                    </div>
                   </div>
 
                   <div className="space-y-6 pt-6 border-t border-white/5 text-left">

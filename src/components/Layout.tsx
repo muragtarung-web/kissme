@@ -9,7 +9,7 @@ import { auth, db } from '../lib/firebase';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { collection, query, where, orderBy, onSnapshot, updateDoc, doc, limit, writeBatch } from 'firebase/firestore';
-import { InAppNotification } from '../types';
+import { InAppNotification, SiteSettings } from '../types';
 import toast from 'react-hot-toast';
 import CartDrawer from './CartDrawer';
 
@@ -34,6 +34,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [selectedNotification, setSelectedNotification] = useState<InAppNotification | null>(null);
   const [notifications, setNotifications] = useState<InAppNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, 'settings', 'main'), (snap) => {
+      if (snap.exists()) {
+        setSettings({ id: snap.id, ...snap.data() } as SiteSettings);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     if (!user) {

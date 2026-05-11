@@ -127,6 +127,8 @@ export interface SiteSettings {
   ctaTitle?: string;
   ctaDescription?: string;
   membersTitle?: string;
+  eventsPageTagline?: string;
+  eventsPageTitle?: string;
   featuredEventBadge?: string;
   featuredEventDate?: string;
   featuredEventTitle?: string;
